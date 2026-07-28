@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: Infera
+      POSTGRES_USER: Infera
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U Infera']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://Infera:${DB_PASSWORD:-changeme123}@db:5432/Infera
+      SECRET_KEY: ${SECRET_KEY:-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      MODEL_RETRAIN_INTERVAL_MINUTES: 30
+      ANOMALY_CONTAMINATION_RATE: 0.05
+      TOKEN_SPIKE_THRESHOLD: 3.0
+      LATENCY_SPIKE_THRESHOLD: 3.0
+      LOOP_COUNT_THRESHOLD: 10
+      FAILURE_CASCADE_WINDOW: 5
+      SIMULATOR_TICK_INTERVAL_SEC: 2
+      COST_PER_1K_TOKENS: 0.002
+    ports:
+      - '8000:8000'
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ml_models:/app/models
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: http://localhost:8000/api/v1
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  ml_models:
