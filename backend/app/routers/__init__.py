@@ -6,6 +6,7 @@ from app.routers.anomalies import router as anomalies_router
 from app.routers.dashboard import router as dashboard_router
 from app.routers.simulator import router as simulator_router
 from app.routers.ml import router as ml_router
+from app.routers.enhanced import router as enhanced_router
 
 all_routers = [
     auth_router,
@@ -16,4 +17,6 @@ all_routers = [
     dashboard_router,
     simulator_router,
     ml_router,
+    enhanced_router,
 ]
+

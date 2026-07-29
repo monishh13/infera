@@ -1,7 +1,22 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, AlertTriangle, Settings, FileText, LogOut, Activity } from 'lucide-react';
+import { LayoutDashboard, AlertTriangle, Settings, FileText, LogOut, Activity, GitCompare, Cpu, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
+const navStyle = (isActive) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '10px 14px',
+  borderRadius: '8px',
+  color: isActive ? '#fff' : 'var(--text-muted)',
+  background: isActive ? 'var(--primary-glow)' : 'transparent',
+  border: isActive ? '1px solid var(--border-highlight)' : '1px solid transparent',
+  fontWeight: isActive ? 600 : 500,
+  textDecoration: 'none',
+  transition: 'all 0.2s ease',
+  fontSize: '0.9rem',
+});
 
 export default function Sidebar() {
   const { logout, user } = useAuth();
@@ -18,7 +33,7 @@ export default function Sidebar() {
       backdropFilter: 'blur(16px)',
       display: 'flex',
       flexDirection: 'column',
-      justify: 'space-between',
+      justifyContent: 'space-between',
       padding: '20px 16px',
       zIndex: 100
     }}>
@@ -39,59 +54,39 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>INFERA</h1>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Phase 1 MVP</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>AI Observability</span>
           </div>
         </div>
 
         {/* Navigation links */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <NavLink to="/" end style={({ isActive }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            color: isActive ? '#fff' : 'var(--text-muted)',
-            background: isActive ? 'var(--primary-glow)' : 'transparent',
-            border: isActive ? '1px solid var(--border-highlight)' : '1px solid transparent',
-            fontWeight: isActive ? 600 : 500,
-            textDecoration: 'none',
-            transition: 'all 0.2s ease'
-          })}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {/* Section: Main */}
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 14px 4px', fontWeight: 600 }}>Main</span>
+
+          <NavLink to="/" end style={({ isActive }) => navStyle(isActive)}>
             <LayoutDashboard size={18} />
             <span>Dashboard</span>
           </NavLink>
 
-          <NavLink to="/anomalies" style={({ isActive }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            color: isActive ? '#fff' : 'var(--text-muted)',
-            background: isActive ? 'var(--primary-glow)' : 'transparent',
-            border: isActive ? '1px solid var(--border-highlight)' : '1px solid transparent',
-            fontWeight: isActive ? 600 : 500,
-            textDecoration: 'none',
-            transition: 'all 0.2s ease'
-          })}>
+          <NavLink to="/anomalies" style={({ isActive }) => navStyle(isActive)}>
             <AlertTriangle size={18} />
             <span>Anomaly History</span>
           </NavLink>
 
-          <NavLink to="/settings" style={({ isActive }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            color: isActive ? '#fff' : 'var(--text-muted)',
-            background: isActive ? 'var(--primary-glow)' : 'transparent',
-            border: isActive ? '1px solid var(--border-highlight)' : '1px solid transparent',
-            fontWeight: isActive ? 600 : 500,
-            textDecoration: 'none',
-            transition: 'all 0.2s ease'
-          })}>
+          <NavLink to="/compare" style={({ isActive }) => navStyle(isActive)}>
+            <GitCompare size={18} />
+            <span>Compare Agents</span>
+          </NavLink>
+
+          {/* Section: System */}
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '16px 14px 4px', fontWeight: 600 }}>System</span>
+
+          <NavLink to="/architecture" style={({ isActive }) => navStyle(isActive)}>
+            <Layers size={18} />
+            <span>Architecture</span>
+          </NavLink>
+
+          <NavLink to="/settings" style={({ isActive }) => navStyle(isActive)}>
             <Settings size={18} />
             <span>Settings & Injector</span>
           </NavLink>
@@ -109,11 +104,12 @@ export default function Sidebar() {
               color: 'var(--text-muted)',
               fontWeight: 500,
               textDecoration: 'none',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              fontSize: '0.9rem',
             }}
           >
             <FileText size={18} />
-            <span>Swagger API Docs</span>
+            <span>API Docs</span>
           </a>
         </nav>
       </div>

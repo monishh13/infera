@@ -1,23 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import PageWrapper from '../components/Layout/PageWrapper';
 import ReliabilityGauge from '../components/ReliabilityGauge/ReliabilityGauge';
 import ToolGraph from '../components/ToolGraph/ToolGraph';
+import HealthMetricCard from '../components/Health/HealthMetricCard';
+import TrendCards from '../components/Trends/TrendCards';
+import StatusBadge from '../components/UI/StatusBadge';
+import LoadingSkeleton from '../components/UI/LoadingSkeleton';
 import { useTelemetry } from '../hooks/useTelemetry';
 import client from '../api/client';
-import { ArrowLeft, Clock, Zap, CheckCircle, AlertTriangle, Layers } from 'lucide-react';
+import { ArrowLeft, Clock, Zap, CheckCircle, AlertTriangle, Layers, Activity, ExternalLink, ShieldCheck, ShieldAlert, HeartPulse } from 'lucide-react';
 
 export default function AgentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { telemetry, stats, reliability, loading } = useTelemetry(id, 3000);
+  const { telemetry, stats, reliability, loading: telemetryLoading } = useTelemetry(id, 3000);
   const [agent, setAgent] = useState(null);
+  const [health, setHealth] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   useEffect(() => {
     client.get(`/agents/${id}`)
       .then(res => setAgent(res.data))
+      .catch(() => {});
+
+    client.get(`/enhanced/agents/${id}/health`)
+      .then(res => setHealth(res.data))
       .catch(() => {});
 
     client.get(`/agents/${id}/sessions`)
@@ -42,7 +52,8 @@ export default function AgentDetail() {
           <ArrowLeft size={16} /> Back to Overview
         </button>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <StatusBadge status={health?.status || 'healthy'} size="md" />
           <span className="badge badge-info" style={{ fontSize: '0.85rem' }}>{agent?.type || 'Agent'}</span>
           <span className={`badge badge-${reliability?.risk_level?.toLowerCase() || 'low'}`} style={{ fontSize: '0.85rem' }}>
             {reliability?.risk_level || 'LOW'} RISK
@@ -74,10 +85,76 @@ export default function AgentDetail() {
           </div>
           <div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block' }}>Failure Threshold</span>
-            <span className="mono" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>{agent?.failure_threshold * 100}%</span>
+            <span className="mono" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>{(agent?.failure_threshold || 0) * 100}%</span>
           </div>
         </div>
       </div>
+
+      {/* Agent Health Report (P5) */}
+      {health && (
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <HeartPulse size={18} color="var(--danger)" />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Comprehensive Health Report</h3>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+            <HealthMetricCard
+              label="Overall Health"
+              value={health.overall_health}
+              unit="/100"
+              trend={health.trend}
+              icon={Activity}
+              color={health.overall_health >= 85 ? 'var(--success)' : (health.overall_health >= 65 ? 'var(--warning)' : 'var(--danger)')}
+            />
+            <HealthMetricCard
+              label="Tool Success Rate"
+              value={`${Math.round(health.tool_success_rate * 100)}%`}
+              icon={CheckCircle}
+              color="var(--success)"
+            />
+            <HealthMetricCard
+              label="Avg Action Latency"
+              value={`${health.avg_latency}ms`}
+              icon={Clock}
+              color="var(--warning)"
+            />
+            <HealthMetricCard
+              label="Predicted Failure Prob"
+              value={`${Math.round(health.failure_probability * 100)}%`}
+              icon={AlertTriangle}
+              color={health.failure_probability > 0.15 ? 'var(--danger)' : 'var(--success)'}
+            />
+          </div>
+
+          {/* Top Reasons Affecting Health */}
+          {health.top_reasons && health.top_reasons.length > 0 && (
+            <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px' }}>
+              <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Key Factors Affecting Health Score
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {health.top_reasons.map((reason, idx) => (
+                  <div
+                    key={idx}
+                    className={`reason-chip ${reason.severity}`}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <AlertTriangle size={14} color={reason.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'} />
+                      <span style={{ fontWeight: 600, color: '#fff' }}>{reason.label}</span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{reason.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Metric Trends (P7) */}
+      <TrendCards agentId={id} />
 
       {/* Grid Row: Reliability Gauge + Performance Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px', marginBottom: '32px' }}>
@@ -131,10 +208,17 @@ export default function AgentDetail() {
         </div>
       </div>
 
-      {/* Session Tool Invocation DAG Graph */}
+      {/* Session Tool Invocation DAG Graph + Link to Session Timeline (P1) */}
       <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Select Execution Session</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Execution Sessions</h3>
+            {selectedSessionId && (
+              <Link to={`/sessions/${selectedSessionId}`} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem', textDecoration: 'none' }}>
+                View Full Timeline & Replay <ExternalLink size={12} />
+              </Link>
+            )}
+          </div>
           {sessions.length > 0 && (
             <select
               className="input-field"

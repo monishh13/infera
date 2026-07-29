@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, Cpu, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ShieldAlert, ArrowRight } from 'lucide-react';
+import AnimatedCounter from '../UI/AnimatedCounter';
 
 export default function AgentCard({ agent }) {
   const navigate = useNavigate();
@@ -15,8 +17,10 @@ export default function AgentCard({ agent }) {
   const tokenPct = Math.min(100, Math.round((agent.current_tokens / (agent.token_budget || 10000)) * 100));
 
   return (
-    <div 
+    <motion.div 
       className="glass-panel"
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ duration: 0.2 }}
       onClick={() => navigate(`/agents/${agent.id}`)}
       style={{
         padding: '24px',
@@ -46,9 +50,10 @@ export default function AgentCard({ agent }) {
             border: `1px solid ${scoreColor}40`,
             textAlign: 'center'
           }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-mono)' }}>
-              {Math.round(agent.reliability_score)}
-            </span>
+            <AnimatedCounter
+              value={agent.reliability_score}
+              style={{ fontSize: '1.5rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-mono)' }}
+            />
             <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
               Reliability
             </span>
@@ -99,6 +104,6 @@ export default function AgentCard({ agent }) {
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

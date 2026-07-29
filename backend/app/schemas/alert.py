@@ -14,6 +14,11 @@ class AlertRead(BaseModel):
     threshold_value: Optional[float] = None
     actual_value: Optional[float] = None
     is_acknowledged: bool
+    acknowledged_at: Optional[datetime] = None
+    acknowledged_by: Optional[str] = None
+    resolved_at: Optional[datetime] = None
+    resolved_by: Optional[str] = None
+    status: Optional[str] = "created"
     created_at: datetime
 
     class Config:
@@ -24,3 +29,4 @@ class AlertStats(BaseModel):
     by_severity: Dict[str, int]
     by_type: Dict[str, int]
     unacknowledged_count: int
+

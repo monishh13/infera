@@ -1,4 +1,5 @@
 from typing import List, Optional, Dict
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -74,6 +75,29 @@ async def acknowledge_alert(id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Alert not found")
     
     alert.is_acknowledged = True
+    alert.acknowledged_at = datetime.utcnow()
+    alert.acknowledged_by = "admin"
+    alert.status = "acknowledged"
     await db.commit()
     await db.refresh(alert)
     return alert
+
+@router.put("/{id}/resolve", response_model=AlertRead)
+async def resolve_alert(id: int, db: AsyncSession = Depends(get_db)):
+    stmt = select(AnomalyAlert).where(AnomalyAlert.id == id)
+    alert = (await db.execute(stmt)).scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    
+    if not alert.is_acknowledged:
+        alert.is_acknowledged = True
+        alert.acknowledged_at = datetime.utcnow()
+        alert.acknowledged_by = "admin"
+    
+    alert.resolved_at = datetime.utcnow()
+    alert.resolved_by = "admin"
+    alert.status = "resolved"
+    await db.commit()
+    await db.refresh(alert)
+    return alert
+

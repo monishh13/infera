@@ -16,4 +16,9 @@ class AnomalyAlert(Base):
     threshold_value = Column(Float, nullable=True)
     actual_value = Column(Float, nullable=True)
     is_acknowledged = Column(Boolean, default=False, index=True)
+    acknowledged_at = Column(DateTime, nullable=True)
+    acknowledged_by = Column(String(100), nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+    resolved_by = Column(String(100), nullable=True)
+    status = Column(String(20), default="created")  # created | acknowledged | resolved
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

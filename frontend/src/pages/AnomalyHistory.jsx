@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import client from '../api/client';
-import { AlertTriangle, Filter, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Filter, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import AnomalyReasons from '../components/AnomalyLog/AnomalyReasons';
+import Recommendations from '../components/AnomalyLog/Recommendations';
+import StatusBadge from '../components/UI/StatusBadge';
+import EmptyState from '../components/UI/EmptyState';
+import LoadingSkeleton from '../components/UI/LoadingSkeleton';
 
 export default function AnomalyHistory() {
   const [alerts, setAlerts] = useState([]);
@@ -9,6 +14,7 @@ export default function AnomalyHistory() {
   const [severityFilter, setSeverityFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
 
   const fetchAlerts = () => {
     let url = '/anomalies/?limit=100';
@@ -31,10 +37,29 @@ export default function AnomalyHistory() {
   const handleAcknowledge = async (id) => {
     try {
       await client.put(`/anomalies/${id}/acknowledge`);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true } : a));
+      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'acknowledged', acknowledged_at: new Date().toISOString() } : a));
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleResolve = async (id) => {
+    try {
+      await client.put(`/anomalies/${id}/resolve`);
+      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'resolved', resolved_at: new Date().toISOString() } : a));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedId(prev => prev === id ? null : id);
+  };
+
+  const getAlertStatus = (alert) => {
+    if (alert.status === 'resolved') return 'resolved';
+    if (alert.status === 'acknowledged' || alert.is_acknowledged) return 'acknowledged';
+    return 'created';
   };
 
   return (
@@ -81,46 +106,124 @@ export default function AnomalyHistory() {
         </div>
       </div>
 
-      {/* Alerts Table */}
+      {/* Alerts List */}
       <div className="glass-panel" style={{ padding: '24px' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-dim)', textAlign: 'left' }}>
-                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Timestamp</th>
-                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Agent ID</th>
-                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Type</th>
-                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Severity</th>
-                <th style={{ padding: '10px 12px', fontWeight: 600 }}>IF Score</th>
-                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Description</th>
-                <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {alerts.map(a => (
-                <tr key={a.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: a.is_acknowledged ? 0.6 : 1 }}>
-                  <td className="mono" style={{ padding: '12px', color: 'var(--text-muted)' }}>{new Date(a.created_at).toLocaleString()}</td>
-                  <td className="mono" style={{ padding: '12px', color: 'var(--primary)', fontWeight: 600 }}>{a.agent_id}</td>
-                  <td style={{ padding: '12px' }}><span className="mono" style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '4px' }}>{a.alert_type}</span></td>
-                  <td style={{ padding: '12px' }}><span className={`badge badge-${a.severity.toLowerCase()}`}>{a.severity}</span></td>
-                  <td className="mono" style={{ padding: '12px', fontWeight: 700, color: a.anomaly_score < -0.5 ? 'var(--danger)' : 'var(--text-main)' }}>{a.anomaly_score ? a.anomaly_score.toFixed(2) : '-'}</td>
-                  <td style={{ padding: '12px', color: 'var(--text-main)' }}>{a.description}</td>
-                  <td style={{ padding: '12px', textAlign: 'right' }}>
-                    {a.is_acknowledged ? (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <CheckCircle size={14} /> Ack'd
+        {loading ? (
+          <LoadingSkeleton type="table" count={5} />
+        ) : alerts.length === 0 ? (
+          <EmptyState icon={AlertTriangle} title="No alerts found" description="No anomaly alerts matching your filter criteria." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {/* Header */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '150px 80px 140px 100px 80px 1fr 140px',
+              gap: '8px',
+              padding: '10px 12px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'var(--text-dim)',
+              borderBottom: '1px solid var(--border-color)',
+            }}>
+              <span>Timestamp</span>
+              <span>Agent</span>
+              <span>Type</span>
+              <span>Severity</span>
+              <span>IF Score</span>
+              <span>Description</span>
+              <span style={{ textAlign: 'right' }}>Status & Action</span>
+            </div>
+
+            {alerts.map(a => {
+              const isExpanded = expandedId === a.id;
+              const alertStatus = getAlertStatus(a);
+
+              return (
+                <div key={a.id}>
+                  <div
+                    onClick={() => toggleExpand(a.id)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '150px 80px 140px 100px 80px 1fr 140px',
+                      gap: '8px',
+                      padding: '12px',
+                      borderBottom: isExpanded ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                      background: alertStatus === 'resolved' ? 'transparent' : 'rgba(255,255,255,0.02)',
+                      opacity: alertStatus === 'resolved' ? 0.5 : 1,
+                      cursor: 'pointer',
+                      alignItems: 'center',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    <span className="mono" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                      {new Date(a.created_at).toLocaleString()}
+                    </span>
+                    <span className="mono" style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.78rem' }}>
+                      {a.agent_id}
+                    </span>
+                    <span>
+                      <span style={{
+                        display: 'inline-block', padding: '2px 8px', borderRadius: '4px',
+                        fontSize: '0.72rem', fontWeight: 600, background: 'rgba(255,255,255,0.06)',
+                        color: '#fff', fontFamily: 'var(--font-mono)'
+                      }}>
+                        {a.alert_type}
                       </span>
-                    ) : (
-                      <button onClick={() => handleAcknowledge(a.id)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-                        Acknowledge
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </span>
+                    <span>
+                      <span className={`badge badge-${a.severity.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>
+                        {a.severity}
+                      </span>
+                    </span>
+                    <span className="mono" style={{ fontWeight: 700, color: a.anomaly_score < -0.5 ? 'var(--danger)' : 'var(--text-main)', fontSize: '0.78rem' }}>
+                      {a.anomaly_score ? a.anomaly_score.toFixed(2) : '-'}
+                    </span>
+                    <span style={{ color: 'var(--text-main)', fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {a.description}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                      {alertStatus === 'resolved' ? (
+                        <StatusBadge status="resolved" size="sm" />
+                      ) : alertStatus === 'acknowledged' ? (
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <StatusBadge status="acknowledged" size="sm" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleResolve(a.id); }}
+                            className="btn-secondary"
+                            style={{ padding: '2px 8px', fontSize: '0.65rem' }}
+                          >
+                            Resolve
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleAcknowledge(a.id); }}
+                          className="btn-secondary"
+                          style={{ padding: '3px 10px', fontSize: '0.72rem' }}
+                        >
+                          Acknowledge
+                        </button>
+                      )}
+                      {isExpanded ? <ChevronUp size={14} color="var(--text-dim)" /> : <ChevronDown size={14} color="var(--text-dim)" />}
+                    </div>
+                  </div>
+
+                  {/* Expandable Reasons & Recommendations */}
+                  {isExpanded && (
+                    <div style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      borderRadius: '0 0 8px 8px',
+                      borderBottom: '1px solid var(--border-color)',
+                    }}>
+                      <AnomalyReasons alertId={a.id} expanded={isExpanded} />
+                      <Recommendations alertId={a.id} expanded={isExpanded} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </PageWrapper>
   );
