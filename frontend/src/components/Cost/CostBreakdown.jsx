@@ -56,7 +56,7 @@ export default function CostBreakdown({ events = [], totalCost = 0 }) {
                 ))}
               </Pie>
               <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-              <Legend wrapperStyle={{ fontSize: '11px', color: 'var(--text-muted)' }} />
+              <Legend wrapperStyle={{ fontSize: '11px', color: '#cbd5e1' }} />
             </PieChart>
           </ResponsiveContainer>
         )}

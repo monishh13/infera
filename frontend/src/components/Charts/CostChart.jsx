@@ -25,8 +25,8 @@ export default function CostChart() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="agent_id" stroke="var(--text-dim)" fontSize={11} tickLine={false} />
-              <YAxis stroke="var(--text-dim)" fontSize={11} tickLine={false} />
+              <XAxis dataKey="agent_id" stroke="#9ca3af" fontSize={11} tickLine={false} tick={{ fill: '#9ca3af' }} />
+              <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} tick={{ fill: '#9ca3af' }} />
               <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff' }} />
               <Bar dataKey="cost_usd" fill="var(--accent)" radius={[4, 4, 0, 0]} />
             </BarChart>

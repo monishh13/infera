@@ -6,7 +6,7 @@ import client from '../api/client';
 import { GitCompare, CheckSquare } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend,
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Cell,
 } from 'recharts';
 
 const AGENT_OPTIONS = [
@@ -159,21 +159,21 @@ export default function AgentComparison() {
               <div style={{ height: '300px', width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
-                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                    <PolarAngleAxis dataKey="metric" stroke="var(--text-dim)" fontSize={11} />
-                    <PolarRadiusAxis stroke="var(--text-dim)" fontSize={9} />
+                    <PolarGrid stroke="rgba(255,255,255,0.12)" />
+                    <PolarAngleAxis dataKey="metric" stroke="#cbd5e1" fontSize={11} tick={{ fill: '#cbd5e1' }} />
+                    <PolarRadiusAxis stroke="#64748b" fontSize={9} />
                     {data.agents.map((agent, idx) => (
                       <Radar
                         key={agent.agent_id}
                         name={agent.agent_name}
                         dataKey={agent.agent_id}
-                        stroke={COLORS[idx]}
-                        fill={COLORS[idx]}
-                        fillOpacity={0.15}
+                        stroke={COLORS[idx % COLORS.length]}
+                        fill={COLORS[idx % COLORS.length]}
+                        fillOpacity={0.2}
                         strokeWidth={2}
                       />
                     ))}
-                    <Legend wrapperStyle={{ fontSize: '11px', color: 'var(--text-muted)' }} />
+                    <Legend wrapperStyle={{ fontSize: '11px', color: '#cbd5e1', paddingTop: '10px' }} />
                     <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -195,12 +195,12 @@ export default function AgentComparison() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.agents} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="agent_name" stroke="var(--text-dim)" fontSize={10} tickLine={false} />
-                      <YAxis stroke="var(--text-dim)" fontSize={10} tickLine={false} />
+                      <XAxis dataKey="agent_name" stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
+                      <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
                       <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
                       <Bar dataKey={m.key} radius={[4, 4, 0, 0]}>
                         {data.agents.map((_, i) => (
-                          <motion.rect key={i} fill={COLORS[i]} />
+                          <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -214,3 +214,4 @@ export default function AgentComparison() {
     </PageWrapper>
   );
 }
+

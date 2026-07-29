@@ -70,8 +70,8 @@ export default function TokenChart() {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="timestamp" stroke="var(--text-dim)" fontSize={12} tickLine={false} />
-              <YAxis stroke="var(--text-dim)" fontSize={12} tickLine={false} />
+              <XAxis dataKey="timestamp" stroke="#9ca3af" fontSize={12} tickLine={false} tick={{ fill: '#9ca3af' }} />
+              <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} tick={{ fill: '#9ca3af' }} />
               <Tooltip 
                 contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff' }}
               />

@@ -25,8 +25,8 @@ export default function LatencyChart() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="tool_name" stroke="var(--text-dim)" fontSize={10} tickLine={false} />
-              <YAxis stroke="var(--text-dim)" fontSize={10} tickLine={false} />
+              <XAxis dataKey="tool_name" stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
+              <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
               <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff' }} />
               <Bar dataKey="avg_latency_ms" radius={[4, 4, 0, 0]}>
                 {data.map((entry, index) => (

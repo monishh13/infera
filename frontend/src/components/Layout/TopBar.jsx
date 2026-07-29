@@ -58,7 +58,7 @@ export default function TopBar({ title }) {
           onClick={toggleSimulator}
           disabled={loading}
           className={simRunning ? "btn-danger" : "btn-primary"}
-          style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+          style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
         >
           {simRunning ? <Square size={16} /> : <Play size={16} />}
           <span>{simRunning ? 'Stop Telemetry Stream' : 'Start Telemetry Stream'}</span>
