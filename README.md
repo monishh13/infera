@@ -1,61 +1,112 @@
-# Infera — AI Agent Monitoring & Anomaly Detection Platform
+# Infera: Real-Time Telemetry and Unsupervised Anomaly Detection Platform for Autonomous LLM Agents
 
-[![Phase](https://img.shields.io/badge/Phase-1%20MVP-blue.svg)](https://github.com/infera/infera)
+[![Build Status](https://img.shields.io/badge/Status-Active%20Research-blue.svg)](https://github.com/infera/infera)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-**Infera** is a real-time monitoring and anomaly detection platform built specifically for autonomous AI agents powered by Large Language Models (LLMs). Traditional APM tools (Datadog, New Relic) are designed for deterministic software and cannot capture LLM-specific failure modes such as token consumption spikes, infinite reasoning loops, tool failure cascades, or behavioral drift. Infera fills this gap.
-
----
-
-## Key Phase 1 Features
-
-- **Real-Time Telemetry Ingestion API**: FAST REST API for receiving structured JSON execution events from LLM agent actions.
-- **Unsupervised Machine Learning Pipeline**: 10-dimensional feature engineering paired with an Isolation Forest model detecting non-deterministic behavioral anomalies.
-- **Agent Reliability Score (ARS)**: Original composite health index (0–100) combining tool success rate (40%), token efficiency (20%), latency score (20%), and loop frequency score (20%).
-- **Multi-Agent Telemetry Simulator**: Built-in simulator with 3 agent archetypes (*Customer Support A001*, *Deep Research A002*, *Sales Rep A003*).
-- **On-Demand Anomaly Injector**: Live trigger panel for injecting `token_spike`, `infinite_loop`, `high_latency`, `tool_failure_cascade`, and `behavioral_drift`.
-- **Modern Dark Glassmorphism Dashboard**: React dashboard with live Recharts token/latency/cost analytics, interactive SVG tool invocation DAG graph, and audio alerts on CRITICAL events.
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18.0+-61DAFB.svg)](https://reactjs.org/)
 
 ---
 
-## Quickstart Instructions
+## Abstract
 
-### Method 1: Running with Docker Compose (Recommended)
+**Infera** is a novel telemetry ingestion and unsupervised anomaly detection framework designed specifically for autonomous AI agents powered by Large Language Models (LLMs). Conventional Application Performance Monitoring (APM) systems assume deterministic compute and static call graphs, making them ill-equipped to detect LLM-specific operational pathologies—such as token consumption spikes, infinite reasoning loops, tool failure cascades, and behavioral distribution shifts. 
 
-1. **Clone & Setup Environment**:
+Infera addresses these challenges by introducing a high-throughput event ingestion pipeline, a multi-dimensional spatial-temporal feature extractor, an online unsupervised **Isolation Forest** detection architecture, and a novel composite health index known as the **Agent Reliability Score (ARS)**.
+
+---
+
+## System Architecture & Key Capabilities
+
+```
++-----------------------------------------------------------------------------------+
+|                                  Infera Platform                                  |
++-----------------------------------------------------------------------------------+
+|  +---------------------+    +---------------------------+    +-----------------+  |
+|  |  Telemetry Ingress  | -->|   10D Feature Extractor   | -->| Isolation Forest|  |
+|  | (FastAPI Execution) |    | (Token, Latency, Loops)   |    | Anomaly Engine  |  |
+|  +---------------------+    +---------------------------+    +-----------------+  |
+|                                           |                                       |
+|                                           v                                       |
+|                             +---------------------------+                         |
+|                             | Agent Reliability Score   |                         |
+|                             |    (Composite Metric)     |                         |
+|                             +---------------------------+                         |
+|                                           |                                       |
+|                                           v                                       |
+|                             +---------------------------+                         |
+|                             | Real-Time React Dashboard |                         |
+|                             | (Visual Graph & Analytics)|                         |
+|                             +---------------------------+                         |
++-----------------------------------------------------------------------------------+
+```
+
+### Core Components
+
+1. **High-Throughput Telemetry Ingress**: RESTful ingestion endpoint implemented in FastAPI, capable of processing structured JSON payloads capturing agent execution traces, tool invocations, token counts, and execution latencies.
+2. **10-Dimensional Spatial-Temporal Feature Engineering**: Translates heterogeneous agent execution logs into a dense 10D feature vector incorporating token dynamics, temporal intervals, tool interaction patterns, and contextual repetition indices.
+3. **Unsupervised Anomaly Detection**: Employs an Isolation Forest algorithm trained in-process to flag non-deterministic runtime anomalies without requiring labeled failure datasets.
+4. **Agent Reliability Score (ARS)**: A quantitative composite index (scale $0 \text{--} 100$) evaluating agent stability:
+   $$\text{ARS} = 0.40 \cdot S_{\text{tool}} + 0.20 \cdot S_{\text{token}} + 0.20 \cdot S_{\text{latency}} + 0.20 \cdot S_{\text{loop}}$$
+   where $S_{\text{tool}}$, $S_{\text{token}}$, $S_{\text{latency}}$, and $S_{\text{loop}}$ normalize tool success rate, token utilization efficiency, response latencies, and loop frequencies respectively.
+5. **Multi-Agent Simulation & Perturbation Framework**: Built-in synthetic telemetry generator featuring three agent archetypes (*Customer Support*, *Deep Research*, *Sales Representative*) and explicit fault injection modules (`token_spike`, `infinite_loop`, `high_latency`, `tool_failure_cascade`, `behavioral_drift`).
+6. **Observability & Visual Analytics Dashboard**: React/Vite web application providing real-time visual telemetry, Directed Acyclic Graph (DAG) state representations of tool interactions, and dynamic alert thresholds.
+
+---
+
+## Deployment & Setup
+
+### Prerequisites
+
+- Docker Engine 24.0+ & Docker Compose v2.20+
+- Python 3.11+ (for local development)
+- Node.js 18+ (for frontend development)
+
+---
+
+### Method 1: Containerized Execution (Recommended)
+
+1. **Environment Configuration**:
    ```bash
    cp .env.example .env
    ```
 
-2. **Launch All Services**:
+2. **Build and Deploy Containers**:
    ```bash
    docker-compose up -d --build
    ```
 
-3. **Access Services**:
-   - **React Dashboard**: [http://localhost:3000](http://localhost:3000)
-   - **FastAPI Swagger API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-   - **Login Credentials**: `admin` / `secret123`
+3. **Service Interfaces**:
+   - **Visual Analytics Dashboard**: `http://localhost:3000`
+   - **OpenAPI / Swagger Documentation**: `http://localhost:8000/docs`
+   - **Default Credentials**: `admin` / `secret123`
 
 ---
 
-### Method 2: Running Locally (Development Mode)
+### Method 2: Local Development Environment
 
-#### 1. Backend Setup:
+#### Backend Setup
+
 ```bash
 cd backend
 python -m venv venv
+
+# Activate Virtual Environment
 # Windows:
 venv\Scripts\activate
 # Linux/macOS:
 source venv/bin/activate
 
+# Install Dependencies & Seed Initial Data
 pip install -r requirements.txt
 python -m app.scripts.seed_admin
+
+# Launch ASGI Server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### 2. Frontend Setup:
+#### Frontend Setup
+
 ```bash
 cd frontend
 npm install
@@ -64,58 +115,71 @@ npm run dev
 
 ---
 
-## 10-Minute Viva Demonstration Script
+## Experimental Protocol & Demonstration Workflow
 
-1. **Launch Platform & Login**:
-   - Start Docker Compose or local dev server. Open `http://localhost:3000` and login as `admin` / `secret123`.
-2. **Show Monitored Agent Fleet**:
-   - Observe initial 3 Agent cards (A001, A002, A003) displaying green Reliability Scores (85+).
-3. **Show FastAPI Auto-Generated Swagger Docs**:
-   - Open `http://localhost:8000/docs` to demonstrate REST endpoints.
-4. **Start Telemetry Stream**:
-   - Click **Start Telemetry Stream** in the TopBar to launch the multi-agent simulator emitting telemetry in real-time.
-5. **Inject Anomaly Live**:
-   - Navigate to **Settings & Injector**. Select `Customer Support Agent (A001)` and anomaly type `Token Consumption Spike`. Click **Inject Anomaly Live**.
-6. **Observe Live Anomaly Detection**:
-   - Return to Dashboard. Notice A001 token consumption chart spike sharply, a CRITICAL alert appearing in the Live Anomaly Log, an audio alert playing, and A001's card turning RED (score dropping to ~40).
-7. **Deep-Dive into Agent Detail**:
-   - Click A001 Agent Card. Inspect the semicircle Reliability Gauge breakdown and the Tool Invocation Sequence DAG graph.
-8. **Check Machine Learning Model Stats**:
-   - Navigate to `http://localhost:8000/api/v1/ml/model/stats` or Swagger UI to demonstrate Isolation Forest model metadata trained in-process.
+To reproduce anomalous state transitions and evaluate system responsiveness:
+
+1. **Initialization & Authentication**:
+   Navigate to `http://localhost:3000` and authenticate using administrative credentials (`admin` / `secret123`). Verify baseline fleet status across monitored agents ($A_{001}, A_{002}, A_{003}$).
+2. **Telemetry Ingestion Initiation**:
+   Trigger the **Start Telemetry Stream** action via the control panel to initiate multi-agent synthetic payload generation.
+3. **Controlled Fault Injection**:
+   Access **Settings & Perturbation Engine**. Select agent instance $A_{001}$ and execute a `Token Consumption Spike` anomaly injection.
+4. **Observation & Metric Evaluation**:
+   Monitor real-time updates in the primary telemetry dashboard:
+   - Token consumption velocity plot spikes.
+   - Anomaly severity logs emit a `CRITICAL` state event.
+   - The Agent Reliability Score (ARS) decays dynamically from nominal ($\approx 85+$) to critical ($\le 40$).
+5. **Structural Analysis**:
+   Select agent $A_{001}$ to inspect the underlying Tool Invocation Sequence DAG and evaluate isolation metrics via the endpoint `/api/v1/ml/model/stats`.
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
 Infera/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py              # FastAPI entry point & lifespan
-│   │   ├── config.py            # Environment settings
-│   │   ├── database.py          # Async SQLAlchemy engine
-│   │   ├── models/              # User, Agent, Session, Telemetry, Alert, Reliability ORM
-│   │   ├── schemas/             # Pydantic request/response validation schemas
-│   │   ├── services/            # Auth, Alert evaluation & APScheduler
-│   │   ├── ml/                  # 10D feature engineering & Isolation Forest model
-│   │   ├── simulator/           # Built-in agents & anomaly injection engine
-│   │   ├── routers/             # Auth, Agents, Sessions, Telemetry, Anomalies, Dashboard, ML
-│   │   └── scripts/             # seed_admin.py script
-│   ├── alembic/                 # Database migrations
-│   ├── requirements.txt
-│   └── Dockerfile
+│   │   ├── main.py              # Application entry point and lifecycle manager
+│   │   ├── config.py            # Platform configuration and environment binding
+│   │   ├── database.py          # Asynchronous ORM engine setup
+│   │   ├── models/              # Relational schemas (User, Agent, Telemetry, Alert)
+│   │   ├── schemas/             # Data validation schemas (Pydantic)
+│   │   ├── services/            # Authentication, alert evaluation, scheduler
+│   │   ├── ml/                  # 10D feature engineering & Isolation Forest estimator
+│   │   ├── simulator/           # Synthetic agent telemetry and fault injectors
+│   │   ├── routers/             # API routing endpoints
+│   │   └── scripts/             # Administrative data seeding scripts
+│   ├── alembic/                 # Database schema migration scripts
+│   ├── requirements.txt         # Backend Python dependencies
+│   └── Dockerfile               # Backend container recipe
 ├── frontend/
 │   ├── src/
-│   │   ├── api/                 # Axios client with JWT interceptor
-│   │   ├── context/             # AuthContext state
-│   │   ├── hooks/               # useAgents & useTelemetry polling hooks
-│   │   ├── components/          # Layout, AgentCard, Charts, AnomalyLog, Gauge, ToolGraph
-│   │   └── pages/               # Login, Dashboard, AgentDetail, AnomalyHistory, Settings
-│   ├── package.json
-│   ├── vite.config.js
-│   └── Dockerfile
-├── docker-compose.yml
-├── docker-compose.dev.yml
-├── .env.example
-└── README.md
+│   ├── api/                 # HTTP client and token interception logic
+│   ├── context/             # Global state providers (Authentication)
+│   ├── hooks/               # Custom hooks for telemetry streaming
+│   ├── components/          # Reusable visualization components & graphs
+│   └── pages/               # Application view layouts
+│   ├── package.json             # Frontend dependency manifest
+│   ├── vite.config.js           # Vite build configuration
+│   └── Dockerfile               # Frontend container recipe
+├── docker-compose.yml           # Multi-container orchestration specification
+├── .env.example                 # Environment configuration template
+└── README.md                    # Project documentation
+```
+
+---
+
+## Citation & License
+
+This software is released under the [MIT License](LICENSE).
+
+```bibtex
+@article{infera2026,
+  title={Infera: Real-Time Telemetry and Unsupervised Anomaly Detection Platform for Autonomous LLM Agents},
+  author={Infera Research Team},
+  year={2026},
+  journal={Repository & Technical Report}
+}
 ```
