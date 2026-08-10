@@ -13,7 +13,7 @@ from app.models.telemetry import TelemetryEvent
 from app.models.reliability import AgentReliabilityScore
 from app.models.user import User
 from app.schemas.telemetry import (
-    TelemetryIngestRequest, TelemetryIngestResponse, TelemetryBatchRequest, TelemetryRead
+    TelemetryIngestRequest, TelemetryIngestResponse, TelemetryBatchRequest, TelemetryRead, TelemetryStatsRead
 )
 from app.ml.feature_engineering import extract_features
 from app.ml.isolation_forest import IFModel
@@ -205,7 +205,7 @@ async def get_agent_telemetry(agent_id: str, limit: int = 50, offset: int = 0, d
     result = await db.execute(stmt)
     return result.scalars().all()
 
-@router.get("/{agent_id}/stats")
+@router.get("/{agent_id}/stats", response_model=TelemetryStatsRead)
 async def get_agent_telemetry_stats(agent_id: str, db: AsyncSession = Depends(get_db)):
     stmt = select(TelemetryEvent).where(TelemetryEvent.agent_id == agent_id)
     events = (await db.execute(stmt)).scalars().all()

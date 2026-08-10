@@ -8,7 +8,7 @@ from app.models.agent import Agent
 from app.models.session import Session
 from app.models.reliability import AgentReliabilityScore
 from app.models.user import User
-from app.schemas.agent import AgentCreate, AgentRead, AgentUpdate
+from app.schemas.agent import AgentCreate, AgentRead, AgentUpdate, AgentReliabilityRead
 from app.schemas.session import SessionRead
 from app.services.auth_service import get_current_user
 
@@ -86,7 +86,7 @@ async def list_agent_sessions(id: str, db: AsyncSession = Depends(get_db), curre
     result = await db.execute(stmt)
     return result.scalars().all()
 
-@router.get("/{id}/reliability")
+@router.get("/{id}/reliability", response_model=AgentReliabilityRead)
 async def get_latest_reliability(id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AgentReliabilityScore).where(AgentReliabilityScore.agent_id == id).order_by(AgentReliabilityScore.calculated_at.desc())
     score_obj = (await db.execute(stmt)).scalars().first()

@@ -50,3 +50,13 @@ class TelemetryRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+class TelemetryStatsRead(BaseModel):
+    agent_id: str
+    total_events: int
+    avg_tokens: float
+    avg_latency_ms: float
+    success_rate: float
+
+    class Config:
+        from_attributes = True

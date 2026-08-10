@@ -35,3 +35,17 @@ class AgentRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+class AgentReliabilityRead(BaseModel):
+    agent_id: str
+    score: float
+    tool_success_rate: float
+    token_efficiency: float
+    latency_score: float
+    loop_frequency_score: float
+    risk_level: str
+    predicted_failure_prob: float
+    calculated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
