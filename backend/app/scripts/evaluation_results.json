@@ -1,0 +1,201 @@
+{
+  "timestamp": "2026-08-10T23:52:24.326718",
+  "total_events_evaluated": 1050,
+  "injected_anomalies_count": 250,
+  "avg_detection_latency_ms": 4.849,
+  "idle_false_positive_rate": 1.0,
+  "overall": {
+    "Isolation Forest": {
+      "precision": 0.2381,
+      "recall": 1.0,
+      "f1": 0.3846,
+      "fpr": 1.0,
+      "tp": 250,
+      "fp": 800,
+      "fn": 0,
+      "tn": 0
+    },
+    "LOF Baseline": {
+      "precision": 0.8108,
+      "recall": 0.96,
+      "f1": 0.8791,
+      "fpr": 0.07,
+      "tp": 240,
+      "fp": 56,
+      "fn": 10,
+      "tn": 744
+    },
+    "Threshold Rules": {
+      "precision": 0.6727,
+      "recall": 0.592,
+      "f1": 0.6298,
+      "fpr": 0.09,
+      "tp": 148,
+      "fp": 72,
+      "fn": 102,
+      "tn": 728
+    }
+  },
+  "per_type": {
+    "token_spike": {
+      "Isolation Forest": {
+        "precision": 0.0588,
+        "recall": 1.0,
+        "f1": 0.1111,
+        "fpr": 1.0,
+        "tp": 50,
+        "fp": 800,
+        "fn": 0,
+        "tn": 0
+      },
+      "LOF Baseline": {
+        "precision": 0.4717,
+        "recall": 1.0,
+        "f1": 0.641,
+        "fpr": 0.07,
+        "tp": 50,
+        "fp": 56,
+        "fn": 0,
+        "tn": 744
+      },
+      "Threshold Rules": {
+        "precision": 0.3628,
+        "recall": 0.82,
+        "f1": 0.5031,
+        "fpr": 0.09,
+        "tp": 41,
+        "fp": 72,
+        "fn": 9,
+        "tn": 728
+      }
+    },
+    "infinite_loop": {
+      "Isolation Forest": {
+        "precision": 0.0588,
+        "recall": 1.0,
+        "f1": 0.1111,
+        "fpr": 1.0,
+        "tp": 50,
+        "fp": 800,
+        "fn": 0,
+        "tn": 0
+      },
+      "LOF Baseline": {
+        "precision": 0.4717,
+        "recall": 1.0,
+        "f1": 0.641,
+        "fpr": 0.07,
+        "tp": 50,
+        "fp": 56,
+        "fn": 0,
+        "tn": 744
+      },
+      "Threshold Rules": {
+        "precision": 0.4098,
+        "recall": 1.0,
+        "f1": 0.5814,
+        "fpr": 0.09,
+        "tp": 50,
+        "fp": 72,
+        "fn": 0,
+        "tn": 728
+      }
+    },
+    "high_latency": {
+      "Isolation Forest": {
+        "precision": 0.0588,
+        "recall": 1.0,
+        "f1": 0.1111,
+        "fpr": 1.0,
+        "tp": 50,
+        "fp": 800,
+        "fn": 0,
+        "tn": 0
+      },
+      "LOF Baseline": {
+        "precision": 0.4717,
+        "recall": 1.0,
+        "f1": 0.641,
+        "fpr": 0.07,
+        "tp": 50,
+        "fp": 56,
+        "fn": 0,
+        "tn": 744
+      },
+      "Threshold Rules": {
+        "precision": 0.04,
+        "recall": 0.06,
+        "f1": 0.048,
+        "fpr": 0.09,
+        "tp": 3,
+        "fp": 72,
+        "fn": 47,
+        "tn": 728
+      }
+    },
+    "tool_failure_cascade": {
+      "Isolation Forest": {
+        "precision": 0.0588,
+        "recall": 1.0,
+        "f1": 0.1111,
+        "fpr": 1.0,
+        "tp": 50,
+        "fp": 800,
+        "fn": 0,
+        "tn": 0
+      },
+      "LOF Baseline": {
+        "precision": 0.4615,
+        "recall": 0.96,
+        "f1": 0.6234,
+        "fpr": 0.07,
+        "tp": 48,
+        "fp": 56,
+        "fn": 2,
+        "tn": 744
+      },
+      "Threshold Rules": {
+        "precision": 0.4098,
+        "recall": 1.0,
+        "f1": 0.5814,
+        "fpr": 0.09,
+        "tp": 50,
+        "fp": 72,
+        "fn": 0,
+        "tn": 728
+      }
+    },
+    "behavioral_drift": {
+      "Isolation Forest": {
+        "precision": 0.0588,
+        "recall": 1.0,
+        "f1": 0.1111,
+        "fpr": 1.0,
+        "tp": 50,
+        "fp": 800,
+        "fn": 0,
+        "tn": 0
+      },
+      "LOF Baseline": {
+        "precision": 0.4286,
+        "recall": 0.84,
+        "f1": 0.5676,
+        "fpr": 0.07,
+        "tp": 42,
+        "fp": 56,
+        "fn": 8,
+        "tn": 744
+      },
+      "Threshold Rules": {
+        "precision": 0.0526,
+        "recall": 0.08,
+        "f1": 0.0635,
+        "fpr": 0.09,
+        "tp": 4,
+        "fp": 72,
+        "fn": 46,
+        "tn": 728
+      }
+    }
+  }
+}
