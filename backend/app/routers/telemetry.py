@@ -42,19 +42,25 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
 
     source_val = req.source or "simulator"
 
-    # 1. Fetch or create Agent
+    # 1. Fetch Agent (reject 404 if not found unless ALLOW_AUTO_PROVISION_AGENTS is True)
     stmt_agent = select(Agent).where(Agent.id == req.agent_id)
     agent = (await db.execute(stmt_agent)).scalars().first()
     if not agent:
-        agent = Agent(
-            id=req.agent_id,
-            name=f"Agent {req.agent_id}",
-            type="customer_support" if "001" in req.agent_id else ("research" if "002" in req.agent_id else "sales"),
-            token_budget=10000,
-            source=source_val
-        )
-        db.add(agent)
-        await db.flush()
+        if settings.ALLOW_AUTO_PROVISION_AGENTS:
+            agent = Agent(
+                id=req.agent_id,
+                name=f"Agent {req.agent_id}",
+                type="customer_support" if "001" in req.agent_id else ("research" if "002" in req.agent_id else "sales"),
+                token_budget=10000,
+                source=source_val
+            )
+            db.add(agent)
+            await db.flush()
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Agent '{req.agent_id}' not registered. Register agent via POST /agents/ first."
+            )
 
     # 2. Fetch or create Session
     stmt_session = select(Session).where(Session.id == req.session_id)

@@ -50,9 +50,31 @@ async def _agent_loop(agent_instance):
 
     logger.info(f"Simulator agent {agent_instance.agent_id} stopped.")
 
+async def _ensure_simulator_agents_exist(db: AsyncSession):
+    sim_data = [
+        {"id": "A001", "name": "Customer Support Agent", "type": "customer_support", "token_budget": 2000},
+        {"id": "A002", "name": "Deep Research Agent", "type": "research", "token_budget": 8000},
+        {"id": "A003", "name": "Sales Representative Agent", "type": "sales", "token_budget": 4000},
+    ]
+    for data in sim_data:
+        stmt = select(Agent).where(Agent.id == data["id"])
+        existing = (await db.execute(stmt)).scalars().first()
+        if not existing:
+            agent = Agent(
+                id=data["id"],
+                name=data["name"],
+                type=data["type"],
+                token_budget=data["token_budget"],
+                is_active=True,
+                source="simulator"
+            )
+            db.add(agent)
+    await db.commit()
+
 @router.post("/start", response_model=SimulatorStatus)
 async def start_simulator(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     _init_simulators()
+    await _ensure_simulator_agents_exist(db)
     if _simulator_state["running"]:
         return await get_simulator_status()
 
