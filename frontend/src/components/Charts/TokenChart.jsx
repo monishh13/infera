@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from 'recharts';
 import client from '../../api/client';
+import SectionHeader from '../UI/SectionHeader';
+
+const AGENT_COLORS = {
+  A001: '#3B82F6', // Primary Blue
+  A002: '#60A5FA', // Light Blue
+  A003: '#16A34A', // Green
+};
 
 export default function TokenChart() {
   const [windowTime, setWindowTime] = useState('1h');
@@ -36,55 +43,78 @@ export default function TokenChart() {
   const chartData = Array.isArray(data) ? data : [];
 
   return (
-    <div className="glass-panel" style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Real-time Token Consumption</h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Tokens per execution step across monitored agents</p>
-        </div>
+    <div className="glass-panel" style={{ padding: 'var(--space-4)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <SectionHeader
+        title="Token Throughput"
+        description="Token velocity per execution step across active fleet"
+        action={
+          <div
+            style={{
+              display: 'flex',
+              gap: '2px',
+              background: 'var(--surface-2)',
+              padding: '2px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-default)',
+            }}
+          >
+            {['1h', '6h', '24h'].map(w => (
+              <button
+                key={w}
+                onClick={() => setWindowTime(w)}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  background: windowTime === w ? '#FFFFFF' : 'transparent',
+                  color: windowTime === w ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  boxShadow: windowTime === w ? 'var(--shadow-sm)' : 'none',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                {w}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
-        {/* Time window toggle buttons */}
-        <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-surface)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          {['1h', '6h', '24h'].map(w => (
-            <button
-              key={w}
-              onClick={() => setWindowTime(w)}
-              style={{
-                padding: '4px 10px',
-                borderRadius: '6px',
-                border: 'none',
-                background: windowTime === w ? 'var(--primary)' : 'transparent',
-                color: windowTime === w ? '#fff' : 'var(--text-muted)',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              {w}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ height: '300px', width: '100%' }}>
+      <div style={{ height: '260px', width: '100%', marginTop: 'var(--space-2)' }}>
         {chartData.length === 0 ? (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: '0.9rem' }}>
-            {loading ? 'Loading token telemetry...' : 'No telemetry data recorded in this window'}
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', fontSize: 'var(--font-size-base)', fontWeight: 500 }}>
+            {loading ? 'Loading token throughput data...' : 'No telemetry data recorded'}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="timestamp" stroke="#9ca3af" fontSize={12} tickLine={false} tick={{ fill: '#9ca3af' }} />
-              <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} tick={{ fill: '#9ca3af' }} />
-              <Tooltip 
-                contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff' }}
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                {Object.entries(AGENT_COLORS).map(([id, color]) => (
+                  <linearGradient key={id} id={`grad-${id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity={0.12} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#EEF0F3" />
+              <XAxis dataKey="timestamp" stroke="#6B7280" fontSize={10} tickLine={false} tick={{ fill: '#6B7280' }} />
+              <YAxis stroke="#6B7280" fontSize={10} tickLine={false} tick={{ fill: '#6B7280' }} />
+              <Tooltip
+                contentStyle={{
+                  background: '#FFFFFF',
+                  borderColor: '#E7E7EA',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#111827',
+                  fontSize: '11px',
+                  boxShadow: 'var(--shadow-md)',
+                }}
               />
-              <ReferenceLine y={500} label={{ value: 'Spike Threshold', fill: '#ef4444', fontSize: 10 }} stroke="#ef4444" strokeDasharray="4 4" />
-              <Line type="monotone" dataKey="A001" name="Support (A001)" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="A002" name="Research (A002)" stroke="#06b6d4" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="A003" name="Sales (A003)" stroke="#10b981" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
-            </LineChart>
+              <ReferenceLine y={500} label={{ value: 'Threshold', fill: 'var(--accent-red)', fontSize: 9 }} stroke="var(--accent-red)" strokeDasharray="3 3" opacity={0.5} />
+              <Area type="monotone" dataKey="A001" name="Support (A001)" stroke={AGENT_COLORS.A001} fill="url(#grad-A001)" strokeWidth={1.5} dot={false} />
+              <Area type="monotone" dataKey="A002" name="Research (A002)" stroke={AGENT_COLORS.A002} fill="url(#grad-A002)" strokeWidth={1.5} dot={false} />
+              <Area type="monotone" dataKey="A003" name="Sales (A003)" stroke={AGENT_COLORS.A003} fill="url(#grad-A003)" strokeWidth={1.5} dot={false} />
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>

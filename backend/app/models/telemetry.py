@@ -20,4 +20,6 @@ class TelemetryEvent(Base):
     raw_payload = Column(JSON, nullable=True)
     anomaly_score = Column(Float, nullable=True)
     is_anomaly = Column(Boolean, default=False, index=True)
+    source = Column(String(20), default="simulator", nullable=True)  # simulator | sdk
+    external_event_id = Column(String(100), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)

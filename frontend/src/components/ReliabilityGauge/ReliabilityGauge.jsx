@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ShieldAlert } from 'lucide-react';
 
 export default function ReliabilityGauge({ reliability }) {
   if (!reliability) return null;
@@ -10,14 +10,14 @@ export default function ReliabilityGauge({ reliability }) {
 
   // SVG Gauge calculations
   const radius = 80;
-  const strokeWidth = 14;
-  const circumference = Math.PI * radius; // semicircle
+  const strokeWidth = 12;
+  const circumference = Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   const getScoreColor = (s) => {
-    if (s >= 85) return '#10b981';
-    if (s >= 65) return '#f59e0b';
-    return '#ef4444';
+    if (s >= 85) return 'var(--accent-green)';
+    if (s >= 65) return 'var(--accent-amber)';
+    return 'var(--accent-red)';
   };
 
   const scoreColor = getScoreColor(score);
@@ -30,26 +30,24 @@ export default function ReliabilityGauge({ reliability }) {
   ];
 
   return (
-    <div className="glass-panel" style={{ padding: '24px', textAlign: 'center' }}>
-      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+    <div className="glass-panel" style={{ padding: 'var(--space-4)', textAlign: 'center', background: '#FFFFFF', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+      <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>
         Agent Reliability Index (ARS)
       </h3>
-      <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '20px' }}>
+      <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-4)' }}>
         Composite health index predicting failure risk
       </p>
 
       {/* Semicircle SVG Gauge */}
       <div style={{ position: 'relative', width: '200px', margin: '0 auto 10px auto' }}>
         <svg width="200" height="110" viewBox="0 0 200 110">
-          {/* Background arc */}
           <path
             d="M 20 100 A 80 80 0 0 1 180 100"
             fill="none"
-            stroke="rgba(255, 255, 255, 0.08)"
+            stroke="#EEF0F3"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
-          {/* Active arc */}
           <path
             d="M 20 100 A 80 80 0 0 1 180 100"
             fill="none"
@@ -69,36 +67,36 @@ export default function ReliabilityGauge({ reliability }) {
           right: 0,
           textAlign: 'center'
         }}>
-          <span style={{ fontSize: '2.5rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-mono)' }}>
+          <span style={{ fontSize: '2.2rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-sans)', lineHeight: 1 }}>
             {score}
           </span>
-          <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+          <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginTop: '2px' }}>
             Out of 100
           </span>
         </div>
       </div>
 
       {/* Risk Badge & Failure Prob */}
-      <div style={{ marginBottom: '24px' }}>
-        <span className={`badge badge-${risk.toLowerCase()}`} style={{ fontSize: '0.85rem', padding: '4px 14px' }}>
-          {risk === 'LOW' ? <ShieldCheck size={14} /> : <ShieldAlert size={14} />}
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <span className={`badge badge-${risk.toLowerCase()}`} style={{ fontSize: '11px', padding: '3px 10px' }}>
+          {risk === 'LOW' ? <ShieldCheck size={13} /> : <ShieldAlert size={13} />}
           {risk} RISK LEVEL
         </span>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-          Estimated Failure Prob (next 10 calls): <strong style={{ color: scoreColor }}>{failureProb}%</strong>
+        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          Failure Probability (next 10 calls): <strong style={{ color: scoreColor }}>{failureProb}%</strong>
         </p>
       </div>
 
-      {/* 4-Component Score Breakdown Table */}
-      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-        <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '12px', textAlign: 'left' }}>
+      {/* 4-Component Score Breakdown */}
+      <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: 'var(--space-3)' }}>
+        <h4 style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '8px', textAlign: 'left' }}>
           Composite Metrics Breakdown
         </h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
           {components.map((c, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>{c.label} <small style={{ color: 'var(--text-dim)' }}>({c.weight})</small></span>
-              <span className="mono" style={{ fontWeight: 600, color: '#fff' }}>{c.val}</span>
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>{c.label} <small style={{ color: 'var(--text-tertiary)' }}>({c.weight})</small></span>
+              <span className="mono" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.val}</span>
             </div>
           ))}
         </div>

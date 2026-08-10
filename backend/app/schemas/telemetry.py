@@ -15,6 +15,8 @@ class TelemetryIngestRequest(BaseModel):
     response_length: Optional[int] = None
     error_message: Optional[str] = None
     raw_payload: Optional[Dict[str, Any]] = None
+    source: Optional[str] = "simulator"  # simulator | sdk
+    external_event_id: Optional[str] = None
 
 class TelemetryIngestResponse(BaseModel):
     event_id: int
@@ -42,6 +44,8 @@ class TelemetryRead(BaseModel):
     error_message: Optional[str] = None
     anomaly_score: Optional[float] = None
     is_anomaly: bool
+    source: Optional[str] = "simulator"
+    external_event_id: Optional[str] = None
     created_at: datetime
 
     class Config:

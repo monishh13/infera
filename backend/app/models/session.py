@@ -14,3 +14,4 @@ class Session(Base):
     total_cost_usd = Column(Float, default=0.0)
     total_tool_calls = Column(Integer, default=0)
     failed_tool_calls = Column(Integer, default=0)
+    source = Column(String(20), default="simulator", nullable=True)  # simulator | sdk

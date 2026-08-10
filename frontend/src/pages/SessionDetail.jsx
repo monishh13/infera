@@ -1,36 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, Clock, Zap, DollarSign, AlertTriangle, Layers, RefreshCw, Hash, XCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Zap, DollarSign, AlertTriangle, Layers, RefreshCw, Hash, XCircle, Terminal, CheckCircle } from 'lucide-react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import ExecutionTimeline from '../components/Timeline/ExecutionTimeline';
 import SessionReplay from '../components/Timeline/SessionReplay';
+import ToolGraph from '../components/ToolGraph/ToolGraph';
 import StatusBadge from '../components/UI/StatusBadge';
-import AnimatedCounter from '../components/UI/AnimatedCounter';
 import LoadingSkeleton from '../components/UI/LoadingSkeleton';
+import SectionHeader from '../components/UI/SectionHeader';
+import EmptyState from '../components/UI/EmptyState';
 import client from '../api/client';
 
 export default function SessionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [detail, setDetail] = useState(null);
+  const [sessionAlerts, setSessionAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replayStep, setReplayStep] = useState(-1);
 
   useEffect(() => {
-    client.get(`/enhanced/sessions/${id}/detail`)
-      .then(res => {
-        setDetail(res.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    let isMounted = true;
+
+    Promise.all([
+      client.get(`/enhanced/sessions/${id}/detail`).catch(() => null),
+      client.get('/anomalies/?limit=50').catch(() => null)
+    ]).then(([detailRes, alertRes]) => {
+      if (!isMounted) return;
+      if (detailRes?.data) setDetail(detailRes.data);
+      if (alertRes?.data && Array.isArray(alertRes.data)) {
+        const matching = alertRes.data.filter(a => a.session_id === id);
+        setSessionAlerts(matching);
+      }
+      setLoading(false);
+    });
+
+    return () => { isMounted = false; };
   }, [id]);
 
   if (loading) {
     return (
-      <PageWrapper title="Session Detail">
-        <LoadingSkeleton type="card" count={4} height="120px" />
-        <div style={{ marginTop: '24px' }}>
+      <PageWrapper title="Session Trace Inspector">
+        <LoadingSkeleton type="metric" count={4} height="84px" />
+        <div style={{ marginTop: 'var(--space-4)' }}>
           <LoadingSkeleton type="table" count={6} />
         </div>
       </PageWrapper>
@@ -40,11 +53,17 @@ export default function SessionDetail() {
   if (!detail) {
     return (
       <PageWrapper title="Session Not Found">
-        <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>
-          Session {id} not found. It may not have any events recorded yet.
-          <div style={{ marginTop: '16px' }}>
-            <button onClick={() => navigate(-1)} className="btn-secondary">Go Back</button>
-          </div>
+        <div className="glass-panel" style={{ padding: 'var(--space-6)', textAlign: 'center', background: '#FFFFFF', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+          <EmptyState
+            icon={Terminal}
+            title={`Session ${id} not found`}
+            description="No telemetry events recorded for this session execution."
+            action={
+              <button onClick={() => navigate(-1)} className="btn-secondary">
+                <ArrowLeft size={14} /> Go Back
+              </button>
+            }
+          />
         </div>
       </PageWrapper>
     );
@@ -63,79 +82,143 @@ export default function SessionDetail() {
   const events = Array.isArray(detail?.events) ? detail.events : [];
 
   return (
-    <PageWrapper title={`Session — ${id}`}>
-      {/* Back button and header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <button onClick={() => navigate(-1)} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
-          <ArrowLeft size={16} /> Back
-        </button>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <StatusBadge status={detail.status} size="md" />
+    <PageWrapper
+      title={`Session Trace — ${id}`}
+      description="Detailed step-by-step telemetry trace inspector, tool DAG graph, and session replay."
+    >
+      {/* Contextual Breadcrumb & Back Action */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+          <Link to="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Overview</Link>
+          <span>/</span>
+          <Link to={`/agents/${detail.agent_id}`} style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
+            {detail.agent_name || detail.agent_id}
+          </Link>
+          <span>/</span>
+          <span className="mono" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{id}</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <button onClick={() => navigate(-1)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }}>
+            <ArrowLeft size={12} /> Back
+          </button>
+          <StatusBadge status={detail.status} size="sm" />
         </div>
       </div>
 
-      {/* Session Banner */}
-      <motion.div
+      {/* Session Identity Banner */}
+      <div
         className="glass-panel"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{ padding: '24px', marginBottom: '24px' }}
+        style={{
+          padding: 'var(--space-4)',
+          marginBottom: 'var(--space-6)',
+          background: '#FFFFFF',
+          border: '1px solid var(--border-default)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-card)',
+        }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
-            Session <span className="mono" style={{ color: 'var(--primary)' }}>{detail.session_id}</span>
-          </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Agent: <span className="mono" style={{ color: 'var(--primary)', fontWeight: 600 }}>{detail.agent_name}</span>
-          </span>
+          <div>
+            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Session <span className="mono" style={{ color: 'var(--accent-primary)' }}>{detail.session_id}</span>
+            </h2>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+              Agent: <Link to={`/agents/${detail.agent_id}`} className="mono" style={{ color: 'var(--accent-primary)', fontWeight: 600, textDecoration: 'none' }}>{detail.agent_name}</Link> ({detail.agent_id})
+            </span>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '24px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-          {detail.started_at && <span>Started: {new Date(detail.started_at).toLocaleString()}</span>}
-          {detail.ended_at && <span>Ended: {new Date(detail.ended_at).toLocaleString()}</span>}
-        </div>
-      </motion.div>
 
-      {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-4)', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          {detail.started_at && <span>Started: <strong className="mono">{new Date(detail.started_at).toLocaleString()}</strong></span>}
+          {detail.ended_at && <span>Ended: <strong className="mono">{new Date(detail.ended_at).toLocaleString()}</strong></span>}
+        </div>
+      </div>
+
+      {/* Anomaly Alert Panel (If Anomalies Detected for this Session) */}
+      {sessionAlerts.length > 0 && (
+        <div
+          style={{
+            padding: 'var(--space-4)',
+            marginBottom: 'var(--space-6)',
+            borderRadius: 'var(--radius-lg)',
+            background: 'var(--accent-red-soft)',
+            border: '1px solid rgba(220, 38, 38, 0.25)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <AlertTriangle size={16} color="var(--accent-red)" />
+            <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--accent-red)' }}>
+              Anomaly Detected in Session
+            </h3>
+          </div>
+          {sessionAlerts.map(alert => (
+            <div key={alert.id} style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-primary)', marginBottom: '4px' }}>
+              <span className="mono" style={{ fontWeight: 600, color: 'var(--accent-red)' }}>[{alert.severity}]</span> {alert.description} (IF Score: {alert.anomaly_score?.toFixed(2)})
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Execution Stats KPI Cards */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+          gap: 'var(--space-3)',
+          marginBottom: 'var(--space-6)',
+        }}
+      >
         {[
-          { label: 'Total Events', value: stats.total_events, icon: Layers, color: 'var(--primary)' },
-          { label: 'Execution Time', value: `${(stats.execution_duration_ms / 1000).toFixed(1)}s`, icon: Clock, color: 'var(--accent)' },
-          { label: 'Avg Latency', value: `${stats.avg_latency_ms}ms`, icon: Clock, color: 'var(--warning)' },
-          { label: 'Total Tokens', value: stats.total_tokens, icon: Zap, color: 'var(--primary)' },
-          { label: 'Tools Used', value: stats.total_tools_used, icon: Hash, color: 'var(--accent)' },
-          { label: 'Total Cost', value: `$${stats.total_cost_usd.toFixed(4)}`, icon: DollarSign, color: 'var(--success)' },
-          { label: 'Retries', value: stats.retries, icon: RefreshCw, color: 'var(--warning)' },
-          { label: 'Failures', value: stats.failure_count, icon: XCircle, color: 'var(--danger)' },
-        ].map((stat, idx) => {
+          { label: 'Total Steps', value: stats.total_events, icon: Layers, color: 'var(--accent-primary)' },
+          { label: 'Execution Time', value: `${(stats.execution_duration_ms / 1000).toFixed(1)}s`, icon: Clock, color: 'var(--accent-blue)' },
+          { label: 'Avg Step Latency', value: `${stats.avg_latency_ms}ms`, icon: Clock, color: 'var(--accent-amber)' },
+          { label: 'Total Tokens', value: stats.total_tokens, icon: Zap, color: 'var(--accent-primary)' },
+          { label: 'Tools Used', value: stats.total_tools_used, icon: Hash, color: 'var(--accent-blue)' },
+          { label: 'Total Cost', value: `$${stats.total_cost_usd.toFixed(4)}`, icon: DollarSign, color: 'var(--accent-green)' },
+          { label: 'Retries', value: stats.retries, icon: RefreshCw, color: 'var(--accent-amber)' },
+          { label: 'Failures', value: stats.failure_count, icon: XCircle, color: 'var(--accent-red)' },
+        ].map((stat) => {
           const Icon = stat.icon;
           return (
-            <motion.div
+            <div
               key={stat.label}
-              className="glass-panel kpi-card"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.04, duration: 0.3 }}
-              style={{ padding: '16px', position: 'relative', overflow: 'hidden' }}
+              className="glass-panel"
+              style={{
+                padding: 'var(--space-3)',
+                background: '#FFFFFF',
+                border: '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: 'var(--shadow-card)',
+              }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: stat.color, opacity: 0.5 }} />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 500 }}>{stat.label}</span>
-                <Icon size={15} color={stat.color} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{stat.label}</span>
+                <Icon size={14} color={stat.color} />
               </div>
-              <span className="mono" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+              <span className="mono" style={{ fontSize: 'var(--font-size-metric)', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
                 {stat.value}
               </span>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
-      {/* Session Replay */}
-      <div style={{ marginBottom: '24px' }}>
+      {/* Session Tool Invocation DAG Graph */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <SectionHeader
+          title="Session Tool Invocation DAG Graph"
+          description="Visual tool execution sequence graph"
+        />
+        <ToolGraph sessionId={id} />
+      </div>
+
+      {/* Interactive Session Replay Bar */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
         <SessionReplay events={events} onStepChange={setReplayStep} />
       </div>
 
-      {/* Execution Timeline */}
+      {/* Step-by-Step Execution Timeline & Event Inspector */}
       <div>
         <ExecutionTimeline events={events} highlightIndex={replayStep} />
       </div>

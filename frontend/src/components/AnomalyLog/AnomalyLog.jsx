@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, CheckCircle, Bell, RefreshCw, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import client from '../../api/client';
 import AnomalyReasons from './AnomalyReasons';
 import Recommendations from './Recommendations';
 import StatusBadge from '../UI/StatusBadge';
+import SectionHeader from '../UI/SectionHeader';
 
-// Web Audio API beep generator for CRITICAL alerts
 function playCriticalBeep() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -15,17 +15,17 @@ function playCriticalBeep() {
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+    osc.stop(ctx.currentTime + 0.25);
   } catch (e) {
-    // Ignore audio context errors if browser blocks auto-play
+    // Ignore audio context errors if blocked by browser
   }
 }
 
@@ -101,151 +101,122 @@ export default function AnomalyLog({ limit = 20 }) {
   const safeAlerts = Array.isArray(alerts) ? alerts : [];
 
   return (
-    <div className="glass-panel" style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertTriangle size={20} color="var(--warning)" />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Live Anomaly Detection Log</h3>
-          </div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '2px' }}>
-            Unsupervised Isolation Forest + threshold alert triggers
-          </p>
-        </div>
+    <div className="glass-panel" style={{ padding: 'var(--space-4)' }}>
+      <SectionHeader
+        title="Anomaly Events"
+        description="Isolation Forest anomaly triggers and threshold events"
+        action={
+          <button
+            onClick={fetchAlerts}
+            className="btn-secondary"
+            style={{ padding: '3px 8px', fontSize: '11px' }}
+          >
+            <RefreshCw size={11} /> Refresh
+          </button>
+        }
+      />
 
-        <button 
-          onClick={fetchAlerts}
-          className="btn-secondary"
-          style={{ padding: '6px 12px', fontSize: '0.75rem' }}
-        >
-          <RefreshCw size={14} /> Refresh
-        </button>
-      </div>
-
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto', marginTop: 'var(--space-2)' }}>
         {safeAlerts.length === 0 ? (
-          <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.9rem' }}>
-            {loading ? 'Checking anomaly alerts...' : 'No anomaly alerts recorded. All systems operating normally.'}
+          <div style={{ padding: '24px 0', textAlign: 'center', color: '#64748B', fontSize: 'var(--font-size-base)', fontWeight: 500 }}>
+            {loading ? 'Scanning telemetry events...' : 'No anomaly events recorded. Systems operating normally.'}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {/* Table header */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '80px 80px 130px 100px 80px 1fr 130px',
-              gap: '8px',
-              padding: '10px 12px',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: 'var(--text-dim)',
-              borderBottom: '1px solid var(--border-color)',
-            }}>
-              <span>Time</span>
-              <span>Agent</span>
-              <span>Type</span>
-              <span>Severity</span>
-              <span>IF Score</span>
-              <span>Description</span>
-              <span style={{ textAlign: 'right' }}>Status</span>
-            </div>
+          <table className="obs-table">
+            <thead>
+              <tr>
+                <th style={{ width: '80px' }}>Detected</th>
+                <th style={{ width: '80px' }}>Agent</th>
+                <th>Event Type</th>
+                <th>Severity</th>
+                <th>IF Score</th>
+                <th>Description</th>
+                <th style={{ textAlign: 'right' }}>Status / Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {safeAlerts.map(alert => {
+                const isCritical = alert.severity === 'CRITICAL';
+                const isWarning = alert.severity === 'WARNING';
+                const isExpanded = expandedId === alert.id;
+                const alertStatus = getAlertStatus(alert);
 
-            {safeAlerts.map(alert => {
-              const isCritical = alert.severity === 'CRITICAL';
-              const isWarning = alert.severity === 'WARNING';
-              const isExpanded = expandedId === alert.id;
-              const alertStatus = getAlertStatus(alert);
-              
-              return (
-                <div key={alert.id}>
-                  <div
-                    onClick={() => toggleExpand(alert.id)}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '80px 80px 130px 100px 80px 1fr 130px',
-                      gap: '8px',
-                      padding: '12px',
-                      borderBottom: isExpanded ? 'none' : '1px solid rgba(255,255,255,0.04)',
-                      background: alertStatus === 'resolved'
-                        ? 'transparent'
-                        : (isCritical ? 'rgba(239, 68, 68, 0.08)' : (isWarning ? 'rgba(245, 158, 11, 0.05)' : 'rgba(59, 130, 246, 0.04)')),
-                      borderLeft: isCritical ? '4px solid var(--danger)' : (isWarning ? '4px solid var(--warning)' : '4px solid transparent'),
-                      opacity: alertStatus === 'resolved' ? 0.5 : 1,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      borderRadius: isExpanded ? '8px 8px 0 0' : '0',
-                      alignItems: 'center',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    <span className="mono" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                      {getTimeSince(alert.created_at)}
-                    </span>
-                    <span className="mono" style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '0.78rem' }}>
-                      {alert.agent_id}
-                    </span>
-                    <span>
-                      <span style={{
-                        display: 'inline-block', padding: '2px 8px', borderRadius: '4px',
-                        fontSize: '0.72rem', fontWeight: 600, background: 'rgba(255,255,255,0.06)',
-                        color: '#fff', fontFamily: 'var(--font-mono)'
-                      }}>
-                        {alert.alert_type}
-                      </span>
-                    </span>
-                    <span>
-                      <span className={`badge badge-${alert.severity.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>
-                        {alert.severity}
-                      </span>
-                    </span>
-                    <span className="mono" style={{ fontWeight: 700, color: alert.anomaly_score < -0.5 ? 'var(--danger)' : 'var(--text-main)', fontSize: '0.78rem' }}>
-                      {alert.anomaly_score ? alert.anomaly_score.toFixed(2) : '-'}
-                    </span>
-                    <span style={{ color: 'var(--text-main)', fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {alert.description}
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                      {alertStatus === 'resolved' ? (
-                        <StatusBadge status="resolved" size="sm" />
-                      ) : alertStatus === 'acknowledged' ? (
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <StatusBadge status="acknowledged" size="sm" />
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleResolve(alert.id); }}
-                            className="btn-secondary"
-                            style={{ padding: '2px 8px', fontSize: '0.65rem' }}
-                          >
-                            Resolve
-                          </button>
+                return (
+                  <React.Fragment key={alert.id}>
+                    <tr
+                      onClick={() => toggleExpand(alert.id)}
+                      style={{
+                        cursor: 'pointer',
+                        background: alertStatus === 'resolved'
+                          ? 'transparent'
+                          : (isCritical ? 'rgba(220, 38, 38, 0.04)' : (isWarning ? 'rgba(217, 119, 6, 0.03)' : 'transparent')),
+                        borderLeft: isCritical ? '3px solid var(--accent-red)' : (isWarning ? '3px solid var(--accent-amber)' : '3px solid transparent'),
+                        opacity: alertStatus === 'resolved' ? 0.6 : 1,
+                      }}
+                    >
+                      <td className="mono" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                        {getTimeSince(alert.created_at)}
+                      </td>
+                      <td className="mono" style={{ fontWeight: 600, color: 'var(--accent-primary)', fontSize: '11px' }}>
+                        {alert.agent_id}
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
+                          {alert.alert_type}
+                        </span>
+                      </td>
+                      <td>
+                        <StatusBadge status={alert.severity} size="sm" />
+                      </td>
+                      <td className="mono" style={{ fontWeight: 600, color: alert.anomaly_score < -0.5 ? 'var(--accent-red)' : 'var(--text-primary)', fontSize: '11px' }}>
+                        {alert.anomaly_score ? alert.anomaly_score.toFixed(2) : '-'}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-base)', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {alert.description}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                          {alertStatus === 'resolved' ? (
+                            <StatusBadge status="resolved" size="sm" />
+                          ) : alertStatus === 'acknowledged' ? (
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <StatusBadge status="acknowledged" size="sm" />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleResolve(alert.id); }}
+                                className="btn-secondary"
+                                style={{ padding: '2px 6px', fontSize: '10px' }}
+                              >
+                                Resolve
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleAcknowledge(alert.id); }}
+                              className="btn-secondary"
+                              style={{ padding: '2px 6px', fontSize: '10px' }}
+                            >
+                              Acknowledge
+                            </button>
+                          )}
+                          {isExpanded ? <ChevronUp size={12} color="var(--text-tertiary)" /> : <ChevronDown size={12} color="var(--text-tertiary)" />}
                         </div>
-                      ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleAcknowledge(alert.id); }}
-                          className="btn-secondary"
-                          style={{ padding: '3px 10px', fontSize: '0.72rem' }}
-                        >
-                          Acknowledge
-                        </button>
-                      )}
-                      {isExpanded ? <ChevronUp size={14} color="var(--text-dim)" /> : <ChevronDown size={14} color="var(--text-dim)" />}
-                    </div>
-                  </div>
+                      </td>
+                    </tr>
 
-                  {/* Expandable reasons + recommendations */}
-                  {isExpanded && (
-                    <div style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      borderRadius: '0 0 8px 8px',
-                      borderLeft: isCritical ? '4px solid var(--danger)' : (isWarning ? '4px solid var(--warning)' : '4px solid transparent'),
-                      borderBottom: '1px solid var(--border-color)',
-                    }}>
-                      <AnomalyReasons alertId={alert.id} expanded={isExpanded} />
-                      <Recommendations alertId={alert.id} expanded={isExpanded} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    {/* Expandable Root Cause & Recommendations */}
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={7} style={{ padding: 0, borderBottom: '1px solid var(--border-default)', background: 'var(--surface-2)' }}>
+                          <AnomalyReasons alertId={alert.id} expanded={isExpanded} />
+                          <Recommendations alertId={alert.id} expanded={isExpanded} />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

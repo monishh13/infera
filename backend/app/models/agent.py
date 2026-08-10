@@ -14,5 +14,6 @@ class Agent(Base):
     failure_threshold = Column(Float, default=0.30)
     loop_threshold = Column(Integer, default=10)
     is_active = Column(Boolean, default=True)
+    source = Column(String(20), default="simulator", nullable=True)  # simulator | sdk
     owner_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

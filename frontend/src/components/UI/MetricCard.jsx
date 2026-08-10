@@ -3,111 +3,52 @@ import { motion } from 'motion/react';
 import AnimatedCounter from './AnimatedCounter';
 import Sparkline from './Sparkline';
 
-/**
- * MetricCard — premium KPI card for the dashboard system status area.
- *
- * @param {string}            title       - Metric title (e.g. "Active AI Agents")
- * @param {number|string}     value       - Primary metric value
- * @param {string}            prefix      - Value prefix (e.g. "$")
- * @param {string}            suffix      - Value suffix (e.g. "%")
- * @param {number}            decimals    - Decimal places for AnimatedCounter
- * @param {React.ElementType} icon        - Lucide icon component
- * @param {string}            accentColor - Accent color for icon and top bar
- * @param {string}            subtitle    - Supporting context line
- * @param {string}            trend       - Trend text (e.g. "↑ 12%")
- * @param {string}            trendColor  - Trend text color
- * @param {number[]}          sparkData   - Data array for sparkline
- * @param {string}            sparkColor  - Sparkline color (defaults to accentColor)
- * @param {number}            index       - Stagger index for entrance animation
- */
 export default function MetricCard({
   title,
   value,
   prefix = '',
   suffix = '',
   decimals = 0,
-  icon: Icon,
-  accentColor = 'var(--primary)',
   subtitle,
   trend,
   trendColor = 'var(--text-tertiary)',
   sparkData,
-  sparkColor,
+  sparkColor = 'var(--accent-primary)',
   index = 0,
 }) {
   return (
     <motion.div
       className="glass-panel kpi-card"
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: index * 0.06,
-        duration: 0.4,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+      transition={{ delay: index * 0.03, duration: 0.18 }}
       style={{
-        padding: 'var(--space-5)',
-        position: 'relative',
-        overflow: 'hidden',
+        padding: 'var(--space-4)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 'var(--space-3)',
+        justifyContent: 'space-between',
+        background: '#FFFFFF',
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
-      {/* Accent top bar */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '2px',
-          background: accentColor,
-          opacity: 0.6,
-        }}
-      />
-
-      {/* Header: title + icon */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <span
-          style={{
-            fontSize: 'var(--font-size-base)',
-            color: 'var(--text-secondary)',
-            fontWeight: 500,
-          }}
-        >
+      {/* Metric Label */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className="label-text" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'none' }}>
           {title}
         </span>
-        {Icon && (
-          <div
-            style={{
-              padding: '7px',
-              borderRadius: 'var(--radius-md)',
-              background: `color-mix(in srgb, ${accentColor} 12%, transparent)`,
-              color: accentColor,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icon size={18} />
-          </div>
-        )}
       </div>
 
-      {/* Value row: number + sparkline */}
+      {/* Value Row + Optional Mini Sparkline */}
       <div
         style={{
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          gap: 'var(--space-3)',
+          gap: 'var(--space-2)',
+          marginTop: 'var(--space-2)',
+          marginBottom: 'var(--space-1)',
         }}
       >
         <AnimatedCounter
@@ -117,50 +58,40 @@ export default function MetricCard({
           decimals={decimals}
           style={{
             fontSize: 'var(--font-size-metric)',
-            fontWeight: 800,
+            fontWeight: 700,
             color: 'var(--text-primary)',
-            lineHeight: 1,
+            lineHeight: 1.1,
+            fontFamily: 'var(--font-sans)',
           }}
         />
         {sparkData && sparkData.length >= 2 && (
           <Sparkline
             data={sparkData}
-            color={sparkColor || accentColor}
-            width={72}
-            height={24}
+            color={sparkColor}
+            width={60}
+            height={22}
+            fill={true}
           />
         )}
       </div>
 
-      {/* Footer: trend + subtitle */}
+      {/* Subtitle / Contextual Trend */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 'var(--space-2)',
-          minHeight: '16px',
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--text-tertiary)',
         }}
       >
         {trend && (
-          <span
-            style={{
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: 600,
-              color: trendColor,
-            }}
-          >
+          <span style={{ fontWeight: 500, color: trendColor }}>
             {trend}
           </span>
         )}
         {subtitle && (
-          <span
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              color: 'var(--text-tertiary)',
-              textAlign: 'right',
-            }}
-          >
+          <span>
             {subtitle}
           </span>
         )}

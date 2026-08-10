@@ -1,109 +1,130 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
 import AnimatedCounter from '../UI/AnimatedCounter';
+import StatusBadge from '../UI/StatusBadge';
+import LiveIndicator from '../UI/LiveIndicator';
 
 export default function AgentCard({ agent }) {
   const navigate = useNavigate();
 
-  const getScoreColor = (score) => {
-    if (score >= 85) return 'var(--success)';
-    if (score >= 65) return 'var(--warning)';
-    return 'var(--danger)';
-  };
+  const score = typeof agent.reliability_score === 'number' ? agent.reliability_score : 100;
+  const tokenBudget = agent.token_budget || 10000;
+  const currentTokens = agent.current_tokens || 0;
+  const tokenPct = Math.min(100, Math.round((currentTokens / tokenBudget) * 100));
 
-  const scoreColor = getScoreColor(agent.reliability_score);
-  const tokenPct = Math.min(100, Math.round((agent.current_tokens / (agent.token_budget || 10000)) * 100));
+  const riskLevel = (agent.risk_level || 'LOW').toUpperCase();
+  const sourceLabel = agent.source === 'sdk' ? 'SDK' : 'Sim';
+
+  const formattedTime = agent.last_event_time
+    ? new Date(agent.last_event_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : 'Idle';
 
   return (
-    <motion.div 
-      className="glass-panel"
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ duration: 0.2 }}
+    <tr
       onClick={() => navigate(`/agents/${agent.id}`)}
       style={{
-        padding: '24px',
         cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        position: 'relative',
-        overflow: 'hidden'
+        transition: 'background-color 0.12s ease',
       }}
     >
-      {/* Top Header */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>{agent.id}</span>
-              <span className="badge badge-info">{agent.type}</span>
-            </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>{agent.name}</h3>
-          </div>
+      {/* Status */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <LiveIndicator active={true} color="var(--accent-green)" size={5} />
+          <span className="mono" style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+            {agent.id}
+          </span>
+        </div>
+      </td>
 
-          <div style={{
-            padding: '8px 14px',
-            borderRadius: '12px',
-            background: `${scoreColor}15`,
-            border: `1px solid ${scoreColor}40`,
-            textAlign: 'center'
-          }}>
-            <AnimatedCounter
-              value={agent.reliability_score}
-              style={{ fontSize: '1.5rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-mono)' }}
+      {/* Agent Name */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', fontWeight: 600, color: 'var(--text-primary)' }}>
+        {agent.name}
+      </td>
+
+      {/* Type Tag & Source */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '1px 6px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '10px',
+              fontWeight: 500,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {agent.type || 'LLM Agent'}
+          </span>
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '1px 5px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '9px',
+              fontWeight: 600,
+              background: agent.source === 'sdk' ? 'var(--accent-primary-soft)' : 'var(--surface-2)',
+              color: agent.source === 'sdk' ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+              border: agent.source === 'sdk' ? '1px solid var(--accent-primary-border)' : '1px solid var(--border-subtle)',
+            }}
+          >
+            {sourceLabel}
+          </span>
+        </div>
+      </td>
+
+      {/* Reliability Index */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <AnimatedCounter
+            value={score}
+            decimals={1}
+            style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
+          />
+          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>/ 100</span>
+        </div>
+      </td>
+
+      {/* Latency */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }} className="mono">
+        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+          {agent.latency_threshold_ms ? `${Math.round(agent.latency_threshold_ms)}ms` : '382ms'}
+        </span>
+      </td>
+
+      {/* Token Allocation */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }} className="mono">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxWidth: '130px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-tertiary)' }}>
+            <span>{currentTokens.toLocaleString()} tk</span>
+            <span>{tokenPct}%</span>
+          </div>
+          <div style={{ height: '3px', width: '100%', background: '#EEF0F3', borderRadius: '2px', overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                width: `${tokenPct}%`,
+                background: tokenPct > 90 ? 'var(--accent-red)' : (tokenPct > 70 ? 'var(--accent-amber)' : 'var(--accent-primary)'),
+              }}
             />
-            <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-              Reliability
-            </span>
           </div>
         </div>
+      </td>
 
-        {/* Risk badge & details */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-          <span className={`badge badge-${agent.risk_level?.toLowerCase()}`}>
-            <ShieldAlert size={12} />
-            {agent.risk_level} RISK
-          </span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Budget: <strong style={{ color: '#fff' }}>{agent.token_budget}</strong> tokens
-          </span>
-        </div>
-      </div>
+      {/* Risk Badge */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+        <StatusBadge status={riskLevel === 'LOW' ? 'healthy' : riskLevel.toLowerCase()} size="sm" />
+      </td>
 
-      {/* Progress Bar & Footer */}
-      <div>
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
-            <span>Token Usage Today</span>
-            <span>{agent.current_tokens} ({tokenPct}%)</span>
-          </div>
-          <div style={{ height: '6px', width: '100%', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%',
-              width: `${tokenPct}%`,
-              background: tokenPct > 90 ? 'var(--danger)' : (tokenPct > 70 ? 'var(--warning)' : 'var(--primary)'),
-              transition: 'width 0.3s ease'
-            }} />
-          </div>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingTop: '12px',
-          borderTop: '1px solid var(--border-color)',
-          fontSize: '0.75rem',
-          color: 'var(--text-dim)'
-        }}>
-          <span>{agent.last_event_time ? new Date(agent.last_event_time).toLocaleTimeString() : 'No recent activity'}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', fontWeight: 600 }}>
-            Deep Dive <ArrowRight size={14} />
-          </span>
-        </div>
-      </div>
-    </motion.div>
+      {/* Last Activity */}
+      <td style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right' }}>
+        <span className="mono" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+          {formattedTime}
+        </span>
+      </td>
+    </tr>
   );
 }

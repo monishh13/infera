@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import PageWrapper from '../components/Layout/PageWrapper';
+import MetricCard from '../components/UI/MetricCard';
 import AgentCard from '../components/AgentCard/AgentCard';
 import TokenChart from '../components/Charts/TokenChart';
 import LatencyChart from '../components/Charts/LatencyChart';
 import CostChart from '../components/Charts/CostChart';
 import AnomalyLog from '../components/AnomalyLog/AnomalyLog';
 import TrendCards from '../components/Trends/TrendCards';
-import AnimatedCounter from '../components/UI/AnimatedCounter';
 import LoadingSkeleton from '../components/UI/LoadingSkeleton';
 import EmptyState from '../components/UI/EmptyState';
+import SectionHeader from '../components/UI/SectionHeader';
 import { useAgents } from '../hooks/useAgents';
 import client from '../api/client';
-import { Activity, AlertTriangle, DollarSign, ShieldCheck, Cpu } from 'lucide-react';
+import { Terminal } from 'lucide-react';
 
 export default function Dashboard() {
   const { agents, loading: agentsLoading } = useAgents(5000);
@@ -46,91 +47,195 @@ export default function Dashboard() {
     };
   }, []);
 
+  const safeAgents = Array.isArray(agents) ? agents : [];
+
   return (
-    <PageWrapper title="Observability Overview">
-      {/* 4 KPI Stat Cards Row */}
-      {loading ? (
-        <LoadingSkeleton type="card" count={4} height="130px" />
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-          <div className="glass-panel kpi-card kpi-blue" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Active AI Agents</span>
-              <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--primary)' }}>
-                <Activity size={20} />
-              </div>
-            </div>
-            <AnimatedCounter value={overview.active_agents} style={{ fontSize: '2rem', fontWeight: 800, color: '#fff' }} />
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--success)', marginTop: '4px' }}>● 100% Monitored</span>
+    <PageWrapper
+      title="Overview"
+      description="Monitor AI agent execution, reliability, cost, and anomalies."
+    >
+      {/* ROW 1: 3 Compact KPI Cards */}
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        {loading ? (
+          <LoadingSkeleton type="metric" count={3} height="84px" />
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 'var(--space-4)',
+            }}
+          >
+            <MetricCard
+              title="Active Agents"
+              value={overview.active_agents}
+              subtitle="Monitored Fleet"
+              trend="● Active"
+              trendColor="var(--accent-green)"
+              sparkData={[2, 3, 3, 2, 3, 3, overview.active_agents]}
+              sparkColor="var(--accent-primary)"
+              index={0}
+            />
+
+            <MetricCard
+              title="Alerts"
+              value={overview.alerts_today}
+              subtitle="Last 24h"
+              trend={overview.alerts_today > 0 ? 'Active Incidents' : 'No active incidents'}
+              trendColor={overview.alerts_today > 0 ? 'var(--accent-amber)' : 'var(--text-secondary)'}
+              sparkData={[0, 1, 0, 0, 2, overview.alerts_today]}
+              sparkColor={overview.alerts_today > 0 ? 'var(--accent-amber)' : 'var(--accent-green)'}
+              index={1}
+            />
+
+            <MetricCard
+              title="Average Reliability"
+              value={overview.avg_reliability_score}
+              decimals={1}
+              suffix="/100"
+              subtitle="Predictive Index"
+              trend="+2.4% vs prev"
+              trendColor="var(--accent-green)"
+              sparkData={[94, 96, 95, 98, 97, overview.avg_reliability_score]}
+              sparkColor="var(--accent-green)"
+              index={2}
+            />
           </div>
-
-          <div className="glass-panel kpi-card kpi-amber" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Alerts (Last 24h)</span>
-              <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)' }}>
-                <AlertTriangle size={20} />
-              </div>
-            </div>
-            <AnimatedCounter value={overview.alerts_today} style={{ fontSize: '2rem', fontWeight: 800, color: overview.alerts_today > 0 ? 'var(--warning)' : '#fff' }} />
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>Isolation Forest & Rules</span>
-          </div>
-
-          <div className="glass-panel kpi-card kpi-green" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Avg Reliability Score</span>
-              <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)' }}>
-                <ShieldCheck size={20} />
-              </div>
-            </div>
-            <AnimatedCounter value={overview.avg_reliability_score} decimals={1} style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--success)' }} />
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>Predictive Composite Index</span>
-          </div>
-
-          <div className="glass-panel kpi-card kpi-cyan" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Cost Today (USD)</span>
-              <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.15)', color: 'var(--accent)' }}>
-                <DollarSign size={20} />
-              </div>
-            </div>
-            <AnimatedCounter value={overview.cost_today_usd} prefix="$" decimals={4} style={{ fontSize: '2rem', fontWeight: 800, color: '#fff' }} />
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>API Token Expenditure</span>
-          </div>
-        </div>
-      )}
-
-      {/* Trend Cards (P7) */}
-      <TrendCards agentId="A001" />
-
-      {/* Active Agents Cards Grid */}
-      <div style={{ marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>Monitored Agent Fleet</h3>
-        {(() => {
-          const safeAgents = Array.isArray(agents) ? agents : [];
-          if (agentsLoading) return <LoadingSkeleton type="card" count={3} height="200px" />;
-          if (safeAgents.length === 0) return <EmptyState icon={Cpu} title="No active agents" description="Start the telemetry simulator or register an agent to see metrics." />;
-          return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-              {safeAgents.map(agent => (
-                <AgentCard key={agent.id} agent={agent} />
-              ))}
-            </div>
-          );
-        })()}
+        )}
       </div>
 
-      {/* Token Chart */}
-      <div style={{ marginBottom: '32px' }}>
+      {/* ROW 2: 3 Compact KPI Cards */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        {loading ? (
+          <LoadingSkeleton type="metric" count={3} height="84px" />
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 'var(--space-4)',
+            }}
+          >
+            <MetricCard
+              title="Cost Today"
+              value={overview.cost_today_usd}
+              prefix="$"
+              decimals={4}
+              subtitle="API Usage"
+              trend="Today"
+              trendColor="var(--text-secondary)"
+              sparkData={[0.01, 0.02, 0.03, 0.04, overview.cost_today_usd]}
+              sparkColor="var(--accent-blue)"
+              index={3}
+            />
+
+            <MetricCard
+              title="Token Allocation"
+              value={12480}
+              suffix=" tk"
+              subtitle="Current Velocity"
+              trend="2.1k / min"
+              trendColor="var(--text-secondary)"
+              sparkData={[8000, 9500, 11000, 12480]}
+              sparkColor="var(--accent-primary)"
+              index={4}
+            />
+
+            <MetricCard
+              title="Failure Rate"
+              value={0.02}
+              decimals={2}
+              suffix="%"
+              subtitle="Model Invocations"
+              trend="Nominal"
+              trendColor="var(--accent-green)"
+              sparkData={[0.05, 0.04, 0.03, 0.02]}
+              sparkColor="var(--accent-green)"
+              index={5}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ROW 3: Primary Analytics Grid (60% Token Throughput + 40% Avg Latency) */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+          gap: 'var(--space-5)',
+          marginBottom: 'var(--space-6)',
+        }}
+      >
         <TokenChart />
-      </div>
-
-      {/* Analytics Breakdown Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <LatencyChart />
-        <CostChart />
       </div>
 
-      {/* Live Anomaly Log */}
+      {/* ROW 4: Secondary Analytics & Fleet Metric Trends */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.4fr)',
+          gap: 'var(--space-5)',
+          marginBottom: 'var(--space-6)',
+        }}
+      >
+        <CostChart />
+        <div className="glass-panel" style={{ padding: 'var(--space-4)' }}>
+          <SectionHeader
+            title="Fleet Metric Trends"
+            description="Agent performance metrics and stability indicators"
+          />
+          <TrendCards agentId="A001" />
+        </div>
+      </div>
+
+      {/* ROW 5: Monitored Agent Fleet Table */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <SectionHeader
+          title="Monitored Agent Fleet"
+          description="Operational state, token budget allocation, and risk metrics"
+        />
+
+        <div className="glass-panel" style={{ overflow: 'hidden' }}>
+          {(() => {
+            if (agentsLoading) return <LoadingSkeleton type="table" count={3} />;
+            if (safeAgents.length === 0) {
+              return (
+                <EmptyState
+                  icon={Terminal}
+                  title="No telemetry data"
+                  description="Start the telemetry stream to begin collecting agent metrics."
+                />
+              );
+            }
+            return (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="obs-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '70px' }}>Status</th>
+                      <th>Agent</th>
+                      <th>Type</th>
+                      <th>Reliability</th>
+                      <th>Latency</th>
+                      <th>Tokens</th>
+                      <th>Risk</th>
+                      <th style={{ textAlign: 'right' }}>Last Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {safeAgents.map((agent) => (
+                      <AgentCard key={agent.id} agent={agent} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ROW 6: Anomaly Event Log */}
       <div>
         <AnomalyLog limit={15} />
       </div>

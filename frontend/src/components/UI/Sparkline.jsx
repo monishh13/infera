@@ -1,20 +1,10 @@
 import React, { useMemo } from 'react';
 
-/**
- * Sparkline — lightweight SVG mini-chart for KPI cards and inline metrics.
- *
- * @param {number[]} data     - Array of numeric values
- * @param {number}   width    - SVG width (default 80)
- * @param {number}   height   - SVG height (default 28)
- * @param {string}   color    - Stroke color (default var(--primary))
- * @param {boolean}  fill     - Show gradient fill under line
- * @param {number}   strokeWidth - Line thickness (default 1.5)
- */
 export default function Sparkline({
   data = [],
-  width = 80,
-  height = 28,
-  color = 'var(--primary)',
+  width = 70,
+  height = 24,
+  color = 'var(--accent-primary)',
   fill = true,
   strokeWidth = 1.5,
 }) {
@@ -55,18 +45,18 @@ export default function Sparkline({
       style={{ display: 'block', overflow: 'visible' }}
     >
       {fill && (
-        <>
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={color} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <polygon
-            points={fillPoints}
-            fill={`url(#${gradientId})`}
-          />
-        </>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.15} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+      )}
+      {fill && (
+        <polygon
+          points={fillPoints}
+          fill={`url(#${gradientId})`}
+        />
       )}
       <polyline
         points={points}
@@ -75,7 +65,6 @@ export default function Sparkline({
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );

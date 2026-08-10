@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import LoadingSkeleton from '../components/UI/LoadingSkeleton';
+import SectionHeader from '../components/UI/SectionHeader';
+import StatusBadge from '../components/UI/StatusBadge';
 import client from '../api/client';
-import { GitCompare, CheckSquare } from 'lucide-react';
+import { GitCompare } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Cell,
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend,
 } from 'recharts';
 
 const AGENT_OPTIONS = [
@@ -15,7 +16,7 @@ const AGENT_OPTIONS = [
   { id: 'A003', name: 'Sales Agent (A003)' },
 ];
 
-const COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
+const COLORS = ['#3B82F6', '#60A5FA', '#16A34A', '#F59E0B', '#8B5CF6'];
 
 export default function AgentComparison() {
   const [selectedIds, setSelectedIds] = useState(['A001', 'A002', 'A003']);
@@ -45,7 +46,6 @@ export default function AgentComparison() {
 
   const agentsList = Array.isArray(data?.agents) ? data.agents : [];
 
-  // Prepare radar chart data
   const radarData = agentsList.length > 0 ? [
     { metric: 'Reliability', ...Object.fromEntries(agentsList.map(a => [a.agent_id, a.reliability])) },
     { metric: 'Success Rate', ...Object.fromEntries(agentsList.map(a => [a.agent_id, a.tool_success_rate])) },
@@ -54,166 +54,131 @@ export default function AgentComparison() {
     { metric: 'Stability', ...Object.fromEntries(agentsList.map(a => [a.agent_id, 100 - a.failure_rate])) },
   ] : [];
 
-  // Prepare bar chart data
-  const barMetrics = agentsList.length > 0 ? [
-    { metric: 'Avg Latency (ms)', key: 'avg_latency' },
-    { metric: 'Avg Tokens', key: 'avg_tokens' },
-    { metric: 'Reliability', key: 'reliability' },
-    { metric: 'Success Rate (%)', key: 'tool_success_rate' },
-    { metric: 'Failure Rate (%)', key: 'failure_rate' },
-  ] : [];
-
   return (
-    <PageWrapper title="Agent Comparison">
-      {/* Agent Selector */}
-      <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <GitCompare size={18} color="var(--primary)" />
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Select Agents to Compare</h3>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {AGENT_OPTIONS.map((opt, idx) => {
-            const selected = selectedIds.includes(opt.id);
+    <PageWrapper title="Compare Agents" description="Multi-agent benchmarking across reliability, token efficiency, latency, and cost.">
+      {/* Agent Selector Controls */}
+      <div className="glass-panel" style={{ padding: 'var(--space-4)', marginBottom: 'var(--space-6)', background: '#FFFFFF', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+        <SectionHeader
+          title="Select Agents for Comparison"
+          description="Check multi-agent targets to analyze performance variations"
+        />
+
+        <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginTop: 'var(--space-2)' }}>
+          {AGENT_OPTIONS.map(opt => {
+            const isChecked = selectedIds.includes(opt.id);
             return (
               <button
                 key={opt.id}
                 onClick={() => toggleAgent(opt.id)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: selected ? `1px solid ${COLORS[idx]}` : '1px solid var(--border-color)',
-                  background: selected ? `${COLORS[idx]}15` : 'transparent',
-                  color: selected ? COLORS[idx] : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s ease',
-                }}
+                className={isChecked ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 12px', fontSize: 'var(--font-size-base)' }}
               >
-                {selected && <CheckSquare size={14} />}
-                {opt.name}
+                <GitCompare size={13} />
+                <span>{opt.name}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {loading && <LoadingSkeleton type="card" count={2} height="300px" />}
-
-      {agentsList.length > 0 && (
+      {loading ? (
+        <LoadingSkeleton type="chart" count={2} height="280px" />
+      ) : agentsList.length === 0 ? (
+        <div className="glass-panel" style={{ padding: 'var(--space-6)', textAlign: 'center', color: '#64748B' }}>
+          Select at least one agent to view comparison matrix.
+        </div>
+      ) : (
         <>
-          {/* Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${agentsList.length}, 1fr)`, gap: '16px', marginBottom: '32px' }}>
-            {agentsList.map((agent, idx) => (
-              <motion.div
-                key={agent.agent_id}
-                className="glass-panel"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.08 }}
-                style={{ padding: '20px', position: 'relative', overflow: 'hidden' }}
-              >
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: COLORS[idx], opacity: 0.7 }} />
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>{agent.agent_type}</div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>{agent.agent_name}</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Reliability</span>
-                    <span className="mono" style={{ fontWeight: 700, color: agent.reliability >= 85 ? 'var(--success)' : (agent.reliability >= 65 ? 'var(--warning)' : 'var(--danger)') }}>
-                      {agent.reliability}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Avg Latency</span>
-                    <span className="mono" style={{ fontWeight: 600, color: '#fff' }}>{agent.avg_latency}ms</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Success Rate</span>
-                    <span className="mono" style={{ fontWeight: 600, color: 'var(--success)' }}>{agent.tool_success_rate}%</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Total Cost</span>
-                    <span className="mono" style={{ fontWeight: 600, color: '#fff' }}>${agent.total_cost}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Risk Level</span>
-                    <span className={`badge badge-${agent.risk_level.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>{agent.risk_level}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+          {/* Comparison Table */}
+          <div className="glass-panel" style={{ padding: 'var(--space-4)', marginBottom: 'var(--space-6)', background: '#FFFFFF', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+            <SectionHeader title="Agent Performance Benchmarking Matrix" />
+            <div style={{ overflowX: 'auto', marginTop: 'var(--space-2)' }}>
+              <table className="obs-table">
+                <thead>
+                  <tr>
+                    <th>Agent</th>
+                    <th>Type</th>
+                    <th>Reliability</th>
+                    <th>Avg Latency</th>
+                    <th>Avg Tokens</th>
+                    <th>Tool Success</th>
+                    <th>Failure Rate</th>
+                    <th>Total Cost</th>
+                    <th>Risk</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agentsList.map(a => (
+                    <tr key={a.agent_id}>
+                      <td className="mono" style={{ fontWeight: 600, color: 'var(--accent-primary)', fontSize: '11px' }}>
+                        {a.agent_name} ({a.agent_id})
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}>
+                          {a.agent_type}
+                        </span>
+                      </td>
+                      <td className="mono" style={{ fontWeight: 700, color: a.reliability >= 85 ? 'var(--accent-green)' : 'var(--accent-amber)' }}>
+                        {a.reliability} / 100
+                      </td>
+                      <td className="mono" style={{ fontSize: '11px' }}>{a.avg_latency} ms</td>
+                      <td className="mono" style={{ fontSize: '11px' }}>{a.avg_tokens} tk</td>
+                      <td className="mono" style={{ fontSize: '11px', color: 'var(--accent-green)' }}>{a.tool_success_rate}%</td>
+                      <td className="mono" style={{ fontSize: '11px', color: a.failure_rate > 5 ? 'var(--accent-red)' : 'var(--text-primary)' }}>{a.failure_rate}%</td>
+                      <td className="mono" style={{ fontSize: '11px' }}>${a.total_cost.toFixed(4)}</td>
+                      <td>
+                        <StatusBadge status={a.risk_level.toLowerCase()} size="sm" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Charts Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-            {/* Radar Chart */}
-            <motion.div
-              className="glass-panel"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{ padding: '24px' }}
-            >
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '20px' }}>Multi-Dimensional Comparison</h3>
-              <div style={{ height: '300px', width: '100%' }}>
+          {/* Radar & Multi-Agent Charts Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'var(--space-5)' }}>
+            <div className="glass-panel" style={{ padding: 'var(--space-4)', background: '#FFFFFF', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+              <SectionHeader title="Comparative Radar Benchmark" description="5-axis normalized performance footprint" />
+              <div style={{ height: '300px', width: '100%', marginTop: 'var(--space-2)' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
-                    <PolarGrid stroke="rgba(255,255,255,0.12)" />
-                    <PolarAngleAxis dataKey="metric" stroke="#cbd5e1" fontSize={11} tick={{ fill: '#cbd5e1' }} />
-                    <PolarRadiusAxis stroke="#64748b" fontSize={9} />
-                    {agentsList.map((agent, idx) => (
+                    <PolarGrid stroke="#EEF0F3" />
+                    <PolarAngleAxis dataKey="metric" stroke="#6B7280" fontSize={11} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#9CA3AF" fontSize={10} />
+                    {agentsList.map((a, i) => (
                       <Radar
-                        key={agent.agent_id}
-                        name={agent.agent_name}
-                        dataKey={agent.agent_id}
-                        stroke={COLORS[idx % COLORS.length]}
-                        fill={COLORS[idx % COLORS.length]}
-                        fillOpacity={0.2}
-                        strokeWidth={2}
+                        key={a.agent_id}
+                        name={a.agent_name}
+                        dataKey={a.agent_id}
+                        stroke={COLORS[i % COLORS.length]}
+                        fill={COLORS[i % COLORS.length]}
+                        fillOpacity={0.12}
                       />
                     ))}
-                    <Legend wrapperStyle={{ fontSize: '11px', color: '#cbd5e1', paddingTop: '10px' }} />
-                    <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ fontSize: '11px', color: '#374151' }} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Bar Charts */}
-            {barMetrics.map((m, mIdx) => (
-              <motion.div
-                key={m.key}
-                className="glass-panel"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + mIdx * 0.05 }}
-                style={{ padding: '24px' }}
-              >
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '20px' }}>{m.metric}</h3>
-                <div style={{ height: '200px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={agentsList} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="agent_name" stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
-                      <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
-                      <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-                      <Bar dataKey={m.key} radius={[4, 4, 0, 0]}>
-                        {agentsList.map((_, i) => (
-                          <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </motion.div>
-            ))}
+            <div className="glass-panel" style={{ padding: 'var(--space-4)', background: '#FFFFFF', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+              <SectionHeader title="Average Action Latency Comparison" description="Mean latency across execution steps" />
+              <div style={{ height: '300px', width: '100%', marginTop: 'var(--space-2)' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={agentsList} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEF0F3" />
+                    <XAxis dataKey="agent_id" stroke="#6B7280" fontSize={10} />
+                    <YAxis stroke="#6B7280" fontSize={10} />
+                    <Tooltip contentStyle={{ background: '#FFFFFF', borderColor: '#E7E7EA', borderRadius: 'var(--radius-md)', color: '#111827', fontSize: '11px' }} />
+                    <Bar dataKey="avg_latency" fill="var(--accent-blue)" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </>
       )}
     </PageWrapper>
   );
 }
-

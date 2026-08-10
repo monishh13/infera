@@ -25,6 +25,23 @@ from app.services.auth_service import get_current_user
 router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
 
 async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession) -> TelemetryIngestResponse:
+    # 0. Idempotency Check
+    if req.external_event_id:
+        stmt_existing = select(TelemetryEvent).where(TelemetryEvent.external_event_id == req.external_event_id)
+        existing_ev = (await db.execute(stmt_existing)).scalars().first()
+        if existing_ev:
+            # Return idempotent response for already processed event
+            return TelemetryIngestResponse(
+                event_id=existing_ev.id,
+                anomaly_score=round(existing_ev.anomaly_score or 0.0, 4),
+                is_anomaly=existing_ev.is_anomaly,
+                alert_generated=False,
+                alert_id=None,
+                reliability_score=100.0
+            )
+
+    source_val = req.source or "simulator"
+
     # 1. Fetch or create Agent
     stmt_agent = select(Agent).where(Agent.id == req.agent_id)
     agent = (await db.execute(stmt_agent)).scalars().first()
@@ -33,7 +50,8 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
             id=req.agent_id,
             name=f"Agent {req.agent_id}",
             type="customer_support" if "001" in req.agent_id else ("research" if "002" in req.agent_id else "sales"),
-            token_budget=10000
+            token_budget=10000,
+            source=source_val
         )
         db.add(agent)
         await db.flush()
@@ -42,7 +60,7 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
     stmt_session = select(Session).where(Session.id == req.session_id)
     session = (await db.execute(stmt_session)).scalars().first()
     if not session:
-        session = Session(id=req.session_id, agent_id=req.agent_id, started_at=datetime.utcnow(), status="active")
+        session = Session(id=req.session_id, agent_id=req.agent_id, started_at=datetime.utcnow(), status="active", source=source_val)
         db.add(session)
         await db.flush()
 
@@ -95,7 +113,9 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
         error_message=req.error_message,
         raw_payload=req.raw_payload,
         anomaly_score=anomaly_score,
-        is_anomaly=is_anomaly
+        is_anomaly=is_anomaly,
+        source=source_val,
+        external_event_id=req.external_event_id
     )
     db.add(event)
     await db.flush()
