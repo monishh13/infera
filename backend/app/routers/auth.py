@@ -4,14 +4,14 @@ from sqlalchemy import select
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserRead
+from app.schemas.auth import LoginRequest, RegisterRequest, RefreshRequest, TokenResponse, UserRead
 from app.services.auth_service import (
     get_password_hash, verify_password, create_access_token, create_refresh_token, get_current_user
 )
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/register", response_model=UserRead)
+@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     stmt = select(User).where((User.username == req.username) | (User.email == req.email))
     existing = (await db.execute(stmt)).scalars().first()
@@ -43,11 +43,11 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(refresh_token: str, db: AsyncSession = Depends(get_db)):
+async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db)):
     try:
         from jose import jwt
         from app.config import settings
-        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(req.refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Invalid refresh token")
         username = payload.get("username")
