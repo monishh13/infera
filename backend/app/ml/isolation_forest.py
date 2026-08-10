@@ -20,8 +20,8 @@ class IFModel:
         self.fitted = False
 
     def train(self, feature_matrix: np.ndarray):
-        if len(feature_matrix) < 10:
-            raise ValueError('Need at least 10 events to train baseline model')
+        if len(feature_matrix) < 200:
+            raise ValueError('Need at least 200 events to train baseline model')
         X = self.scaler.fit_transform(feature_matrix)
         self.model.fit(X)
         self.fitted = True
@@ -32,8 +32,7 @@ class IFModel:
         X = self.scaler.transform(feature_vector.reshape(1, -1))
         # score_samples: lower / more negative = more anomalous
         score = float(self.model.score_samples(X)[0])
-        label = int(self.model.predict(X)[0])  # -1 = anomaly, 1 = normal
-        is_anomaly = (label == -1 or score < -0.5)
+        is_anomaly = (score <= -0.3)
         return score, is_anomaly
 
     def save(self, path: str):

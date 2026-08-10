@@ -26,8 +26,8 @@ async def retrain_models_job():
         result = await db.execute(stmt)
         events = result.scalars().all()
         
-        if len(events) < 10:
-            logger.info(f"Insufficient events for retraining ({len(events)} < 10). Skipping.")
+        if len(events) < 200:
+            logger.info(f"Insufficient events for retraining ({len(events)} < 200). Skipping.")
             return
 
         # Prepare feature matrix

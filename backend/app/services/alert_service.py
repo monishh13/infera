@@ -38,28 +38,32 @@ async def check_and_create_alert(
         threshold_val = 5.0
         actual_val = float(rolling_fail_count)
 
-    # 3. ML Anomaly checks (Isolation Forest score)
-    elif is_anomaly or anomaly_score < -0.3:
-        if anomaly_score < -0.7:
+    # 3. ML Anomaly checks (Isolation Forest score <= -0.3)
+    elif is_anomaly or anomaly_score <= -0.3:
+        if anomaly_score <= -0.7:
             severity = "CRITICAL"
-        elif anomaly_score < -0.5:
+        elif anomaly_score <= -0.5:
             severity = "WARNING"
         else:
             severity = "INFO"
 
-        # Determine anomaly classification
-        if event.tokens_used > 500:
+        token_spike_threshold = 0.20 * (agent.token_budget or 10000)
+        # Determine anomaly classification (must be one of the fixed 5 alert_types)
+        if event.tokens_used > token_spike_threshold:
             alert_type = "token_spike"
-            description = f"Token consumption spike: {event.tokens_used} tokens (IF score: {round(anomaly_score, 2)})"
+            description = f"Token consumption spike: {event.tokens_used} tokens vs 20% budget threshold {int(token_spike_threshold)} (IF score: {round(anomaly_score, 2)})"
+            threshold_val = float(token_spike_threshold)
             actual_val = float(event.tokens_used)
         elif event.latency_ms > agent.latency_threshold_ms:
             alert_type = "high_latency"
             description = f"High latency spike: {round(event.latency_ms, 1)} ms vs threshold {agent.latency_threshold_ms} ms (IF score: {round(anomaly_score, 2)})"
-            threshold_val = agent.latency_threshold_ms
-            actual_val = event.latency_ms
+            threshold_val = float(agent.latency_threshold_ms)
+            actual_val = float(event.latency_ms)
         else:
             alert_type = "behavioral_drift"
             description = f"Behavioral drift anomaly detected across 10D feature space (IF score: {round(anomaly_score, 2)})"
+            threshold_val = -0.3
+            actual_val = float(anomaly_score)
 
     if alert_type and severity:
         alert = AnomalyAlert(
