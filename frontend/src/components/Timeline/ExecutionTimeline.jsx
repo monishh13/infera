@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { CheckCircle, XCircle, AlertTriangle, Clock, Zap, DollarSign } from 'lucide-react';
 
 const statusIcon = (status, isAnomaly) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { ArrowLeft, Clock, Zap, DollarSign, AlertTriangle, Layers, RefreshCw, Hash, XCircle } from 'lucide-react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import ExecutionTimeline from '../components/Timeline/ExecutionTimeline';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
 import client from '../../api/client';
 

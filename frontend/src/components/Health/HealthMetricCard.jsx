@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import TrendIndicator from './TrendIndicator';
 
 export default function HealthMetricCard({ label, value, unit = '', trend, icon: Icon, color = 'var(--primary)' }) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import LoadingSkeleton from '../components/UI/LoadingSkeleton';
 import client from '../api/client';

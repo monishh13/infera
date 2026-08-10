@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import { Radio, Server, Brain, Database, BarChart2, Layout, Wifi, Lock, Cpu, ArrowDown } from 'lucide-react';
 

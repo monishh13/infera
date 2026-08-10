@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Scissors, FileText, Cpu, Clock as ClockIcon, Globe, Server, RefreshCw, Shield, Search, AlertTriangle, Activity, GitBranch, Brain, Settings, BarChart2, Eye, Lightbulb } from 'lucide-react';
 import client from '../../api/client';
 

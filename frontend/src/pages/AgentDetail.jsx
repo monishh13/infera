@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import PageWrapper from '../components/Layout/PageWrapper';
 import ReliabilityGauge from '../components/ReliabilityGauge/ReliabilityGauge';
 import ToolGraph from '../components/ToolGraph/ToolGraph';
