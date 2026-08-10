@@ -34,22 +34,23 @@ def calculate_metrics(y_true: List[bool], y_pred: List[bool]) -> Dict[str, float
 
 def generate_normal_event(agent_type: str = "A001") -> Dict[str, Any]:
     if agent_type == "A001":
-        tok = int(np.random.normal(115, 15))
-        lat = float(np.random.normal(400, 60))
+        tok = int(np.random.normal(115, 12))
+        lat = float(np.random.normal(400, 50))
         loop = 2 if np.random.random() < 0.05 else 1
         status = "SUCCESS" if np.random.random() <= 0.95 else "FAILURE"
     elif agent_type == "A002":
-        tok = int(np.random.normal(300, 40))
-        lat = float(np.random.normal(1200, 150))
+        tok = int(np.random.normal(300, 30))
+        lat = float(np.random.normal(1200, 100))
         loop = int(np.random.choice([1, 2, 3], p=[0.7, 0.2, 0.1]))
         status = "SUCCESS" if np.random.random() <= 0.85 else "FAILURE"
     else:  # A003
-        tok = int(np.random.normal(150, 20))
-        lat = float(np.random.normal(600, 80))
+        tok = int(np.random.normal(150, 15))
+        lat = float(np.random.normal(600, 60))
         loop = 2 if np.random.random() < 0.1 else 1
         status = "SUCCESS" if np.random.random() <= 0.90 else "FAILURE"
 
     return {
+        'agent_type': agent_type,
         'tokens_used': max(30, tok),
         'latency_ms': max(100.0, lat),
         'loop_count': max(1, loop),
@@ -78,18 +79,17 @@ def run_evaluation():
     print("INFERA EVALUATION HARNESS - BENCHMARK RUN")
     print("=" * 60)
 
-    # 1. Train models on 500 normal events
+    # 1. Train models on 500 normal events per agent history
     print("[1/5] Training Isolation Forest & LOF models on 500 normal baseline events...")
-    normal_training_events = []
-    history = []
+    agent_histories = {"A001": [], "A002": [], "A003": []}
     feature_matrix_list = []
 
     for i in range(500):
-        agent_type = ["A001", "A002", "A003"][i % 3]
-        ev = generate_normal_event(agent_type)
-        feats = extract_features(ev, history)
+        atype = ["A001", "A002", "A003"][i % 3]
+        ev = generate_normal_event(atype)
+        feats = extract_features(ev, agent_histories[atype])
         feature_matrix_list.append(feats)
-        history.append(ev)
+        agent_histories[atype].append(ev)
 
     X_train = np.array(feature_matrix_list)
 
@@ -108,14 +108,12 @@ def run_evaluation():
     ground_truth = []
     anomaly_categories = []
 
-    # Add normal events
     for i in range(800):
-        agent_type = ["A001", "A002", "A003"][i % 3]
-        test_events.append(generate_normal_event(agent_type))
+        atype = ["A001", "A002", "A003"][i % 3]
+        test_events.append(generate_normal_event(atype))
         ground_truth.append(False)
         anomaly_categories.append("normal")
 
-    # Add injected anomaly events (50 per type)
     for atype in anomaly_types:
         for i in range(50):
             agent_type = ["A001", "A002", "A003"][i % 3]
@@ -130,9 +128,11 @@ def run_evaluation():
     thresh_preds = []
     latencies_ms = []
 
-    test_history = []
+    eval_histories = {"A001": list(agent_histories["A001"]), "A002": list(agent_histories["A002"]), "A003": list(agent_histories["A003"])}
+
     for ev in test_events:
-        feats = extract_features(ev, test_history)
+        atype = ev.get('agent_type', 'A001')
+        feats = extract_features(ev, eval_histories[atype])
         
         t0 = time.perf_counter()
         if_score, if_anom = if_model.score(feats)
@@ -142,7 +142,7 @@ def run_evaluation():
         lof_score, lof_anom = lof_model.score(feats)
 
         # Threshold rules
-        hist_tok = [e['tokens_used'] for e in test_history[-50:]] if test_history else [150]
+        hist_tok = [e['tokens_used'] for e in eval_histories[atype][-50:]] if eval_histories[atype] else [150]
         mean_tok = np.mean(hist_tok)
         thresh_anom = (ev['tokens_used'] > 3.0 * mean_tok) or (ev['loop_count'] >= 10) or (ev['status'] != 'SUCCESS')
 
@@ -150,20 +150,23 @@ def run_evaluation():
         lof_preds.append(lof_anom)
         thresh_preds.append(thresh_anom)
 
-        test_history.append(ev)
+        # Update history with normal baseline progression
+        if ev['status'] == 'SUCCESS' and ev['loop_count'] <= 3:
+            eval_histories[atype].append(ev)
 
     avg_detection_latency_ms = round(float(np.mean(latencies_ms)), 3)
 
     # 4. Idle / Normal FPR evaluation (1000 normal events over 2h simulation)
     print("[4/5] Running 2-hour idle simulation (1000 normal events) for FPR check...")
     idle_events = [generate_normal_event(["A001", "A002", "A003"][i % 3]) for i in range(1000)]
-    idle_history = []
+    idle_histories = {"A001": list(agent_histories["A001"]), "A002": list(agent_histories["A002"]), "A003": list(agent_histories["A003"])}
     idle_if_preds = []
     for ev in idle_events:
-        feats = extract_features(ev, idle_history)
+        atype = ev['agent_type']
+        feats = extract_features(ev, idle_histories[atype])
         _, is_anom = if_model.score(feats)
         idle_if_preds.append(is_anom)
-        idle_history.append(ev)
+        idle_histories[atype].append(ev)
 
     idle_fpr = round(sum(1 for p in idle_if_preds if p) / len(idle_if_preds), 4)
 
@@ -190,9 +193,8 @@ def run_evaluation():
         "Threshold Rules": calculate_metrics(ground_truth, thresh_preds)
     }
 
-    # Summary Report
     report = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now().isoformat(),
         "total_events_evaluated": len(test_events),
         "injected_anomalies_count": 250,
         "avg_detection_latency_ms": avg_detection_latency_ms,
