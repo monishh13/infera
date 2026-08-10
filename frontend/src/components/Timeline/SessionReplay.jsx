@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, RotateCcw, FastForward } from 'lucide-react';
 
 export default function SessionReplay({ events = [], onStepChange }) {
+  const safeEvents = Array.isArray(events) ? events : [];
   const [playing, setPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [speed, setSpeed] = useState(1);
   const timerRef = useRef(null);
 
-  const totalSteps = events.length;
+  const totalSteps = safeEvents.length;
 
   const stop = useCallback(() => {
     setPlaying(false);
@@ -38,8 +39,8 @@ export default function SessionReplay({ events = [], onStepChange }) {
     // Calculate delay based on timestamp difference between events
     let delay = 800 / speed;
     if (currentStep >= 0 && currentStep < totalSteps - 1) {
-      const curr = events[currentStep];
-      const next = events[currentStep + 1];
+      const curr = safeEvents[currentStep];
+      const next = safeEvents[currentStep + 1];
       if (curr?.timestamp && next?.timestamp) {
         const diff = new Date(next.timestamp) - new Date(curr.timestamp);
         delay = Math.max(200, Math.min(2000, diff)) / speed;
@@ -50,7 +51,7 @@ export default function SessionReplay({ events = [], onStepChange }) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [playing, currentStep, speed, totalSteps, events, advanceStep]);
+  }, [playing, currentStep, speed, totalSteps, safeEvents, advanceStep]);
 
   const handlePlay = () => {
     if (currentStep >= totalSteps - 1) {
@@ -75,7 +76,7 @@ export default function SessionReplay({ events = [], onStepChange }) {
 
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
 
-  if (!events || events.length === 0) return null;
+  if (safeEvents.length === 0) return null;
 
   return (
     <div className="glass-panel" style={{ padding: '20px' }}>

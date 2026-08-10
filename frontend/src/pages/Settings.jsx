@@ -24,9 +24,10 @@ export default function Settings() {
   useEffect(() => {
     client.get('/agents/')
       .then(res => {
-        setAgents(res.data);
-        if (res.data.length > 0) {
-          const first = res.data[0];
+        const agentList = Array.isArray(res.data) ? res.data : [];
+        setAgents(agentList);
+        if (agentList.length > 0) {
+          const first = agentList[0];
           setSelectedAgentId(first.id);
           setThresholds({
             token_budget: first.token_budget,
@@ -36,12 +37,14 @@ export default function Settings() {
           });
         }
       })
-      .catch(() => {});
+      .catch(() => setAgents([]));
   }, []);
+
+  const safeAgents = Array.isArray(agents) ? agents : [];
 
   const handleAgentSelect = (id) => {
     setSelectedAgentId(id);
-    const found = agents.find(a => a.id === id);
+    const found = safeAgents.find(a => a.id === id);
     if (found) {
       setThresholds({
         token_budget: found.token_budget,
@@ -105,7 +108,7 @@ export default function Settings() {
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Select Target Agent</label>
             <select className="input-field" value={selectedAgentId} onChange={e => handleAgentSelect(e.target.value)}>
-              {agents.map(a => (
+              {safeAgents.map(a => (
                 <option key={a.id} value={a.id}>{a.id} — {a.name}</option>
               ))}
             </select>

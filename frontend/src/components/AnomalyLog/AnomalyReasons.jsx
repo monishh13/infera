@@ -22,10 +22,12 @@ export default function AnomalyReasons({ alertId, expanded = false }) {
     if (!expanded || !alertId) return;
     setLoading(true);
     client.get(`/enhanced/alerts/${alertId}/reasons`)
-      .then(res => setReasons(res.data.reasons || []))
+      .then(res => setReasons(Array.isArray(res.data?.reasons) ? res.data.reasons : (Array.isArray(res.data) ? res.data : [])))
       .catch(() => setReasons([]))
       .finally(() => setLoading(false));
   }, [alertId, expanded]);
+
+  const safeReasons = Array.isArray(reasons) ? reasons : [];
 
   if (!expanded) return null;
 
@@ -46,11 +48,11 @@ export default function AnomalyReasons({ alertId, expanded = false }) {
 
             {loading ? (
               <div style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>Analyzing anomaly reasons...</div>
-            ) : reasons.length === 0 ? (
+            ) : safeReasons.length === 0 ? (
               <div style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>No detailed reasons available</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {reasons.map((reason, idx) => {
+                {safeReasons.map((reason, idx) => {
                   const Icon = ICON_MAP[reason.icon] || AlertTriangle;
                   const severityColor = reason.severity === 'critical' ? 'var(--danger)' : (reason.severity === 'warning' ? 'var(--warning)' : 'var(--primary)');
 

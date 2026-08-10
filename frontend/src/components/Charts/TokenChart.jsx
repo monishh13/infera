@@ -13,12 +13,15 @@ export default function TokenChart() {
       client.get(`/dashboard/metrics/token-usage?window=${windowTime}`)
         .then(r => {
           if (isMounted) {
-            setData(r.data);
+            setData(Array.isArray(r.data) ? r.data : []);
             setLoading(false);
           }
         })
         .catch(() => {
-          if (isMounted) setLoading(false);
+          if (isMounted) {
+            setData([]);
+            setLoading(false);
+          }
         });
     };
 
@@ -29,6 +32,8 @@ export default function TokenChart() {
       clearInterval(timer);
     };
   }, [windowTime]);
+
+  const chartData = Array.isArray(data) ? data : [];
 
   return (
     <div className="glass-panel" style={{ padding: '24px' }}>
@@ -62,13 +67,13 @@ export default function TokenChart() {
       </div>
 
       <div style={{ height: '300px', width: '100%' }}>
-        {data.length === 0 ? (
+        {chartData.length === 0 ? (
           <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: '0.9rem' }}>
             {loading ? 'Loading token telemetry...' : 'No telemetry data recorded in this window'}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="timestamp" stroke="#9ca3af" fontSize={12} tickLine={false} tick={{ fill: '#9ca3af' }} />
               <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} tick={{ fill: '#9ca3af' }} />

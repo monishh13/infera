@@ -43,17 +43,19 @@ export default function AgentComparison() {
     );
   };
 
+  const agentsList = Array.isArray(data?.agents) ? data.agents : [];
+
   // Prepare radar chart data
-  const radarData = data ? [
-    { metric: 'Reliability', ...Object.fromEntries(data.agents.map(a => [a.agent_id, a.reliability])) },
-    { metric: 'Success Rate', ...Object.fromEntries(data.agents.map(a => [a.agent_id, a.tool_success_rate])) },
-    { metric: 'Latency Score', ...Object.fromEntries(data.agents.map(a => [a.agent_id, Math.max(0, 100 - a.avg_latency / 30)])) },
-    { metric: 'Token Eff.', ...Object.fromEntries(data.agents.map(a => [a.agent_id, Math.max(0, 100 - a.avg_tokens / 10)])) },
-    { metric: 'Stability', ...Object.fromEntries(data.agents.map(a => [a.agent_id, 100 - a.failure_rate])) },
+  const radarData = agentsList.length > 0 ? [
+    { metric: 'Reliability', ...Object.fromEntries(agentsList.map(a => [a.agent_id, a.reliability])) },
+    { metric: 'Success Rate', ...Object.fromEntries(agentsList.map(a => [a.agent_id, a.tool_success_rate])) },
+    { metric: 'Latency Score', ...Object.fromEntries(agentsList.map(a => [a.agent_id, Math.max(0, 100 - a.avg_latency / 30)])) },
+    { metric: 'Token Eff.', ...Object.fromEntries(agentsList.map(a => [a.agent_id, Math.max(0, 100 - a.avg_tokens / 10)])) },
+    { metric: 'Stability', ...Object.fromEntries(agentsList.map(a => [a.agent_id, 100 - a.failure_rate])) },
   ] : [];
 
   // Prepare bar chart data
-  const barMetrics = data ? [
+  const barMetrics = agentsList.length > 0 ? [
     { metric: 'Avg Latency (ms)', key: 'avg_latency' },
     { metric: 'Avg Tokens', key: 'avg_tokens' },
     { metric: 'Reliability', key: 'reliability' },
@@ -101,11 +103,11 @@ export default function AgentComparison() {
 
       {loading && <LoadingSkeleton type="card" count={2} height="300px" />}
 
-      {data && data.agents.length > 0 && (
+      {agentsList.length > 0 && (
         <>
           {/* Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${data.agents.length}, 1fr)`, gap: '16px', marginBottom: '32px' }}>
-            {data.agents.map((agent, idx) => (
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${agentsList.length}, 1fr)`, gap: '16px', marginBottom: '32px' }}>
+            {agentsList.map((agent, idx) => (
               <motion.div
                 key={agent.agent_id}
                 className="glass-panel"
@@ -162,7 +164,7 @@ export default function AgentComparison() {
                     <PolarGrid stroke="rgba(255,255,255,0.12)" />
                     <PolarAngleAxis dataKey="metric" stroke="#cbd5e1" fontSize={11} tick={{ fill: '#cbd5e1' }} />
                     <PolarRadiusAxis stroke="#64748b" fontSize={9} />
-                    {data.agents.map((agent, idx) => (
+                    {agentsList.map((agent, idx) => (
                       <Radar
                         key={agent.agent_id}
                         name={agent.agent_name}
@@ -193,13 +195,13 @@ export default function AgentComparison() {
                 <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '20px' }}>{m.metric}</h3>
                 <div style={{ height: '200px', width: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.agents} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <BarChart data={agentsList} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                       <XAxis dataKey="agent_name" stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
                       <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} tick={{ fill: '#9ca3af' }} />
                       <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
                       <Bar dataKey={m.key} radius={[4, 4, 0, 0]}>
-                        {data.agents.map((_, i) => (
+                        {agentsList.map((_, i) => (
                           <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                         ))}
                       </Bar>

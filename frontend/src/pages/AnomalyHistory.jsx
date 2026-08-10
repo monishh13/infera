@@ -24,10 +24,13 @@ export default function AnomalyHistory() {
 
     client.get(url)
       .then(res => {
-        setAlerts(res.data);
+        setAlerts(Array.isArray(res.data) ? res.data : []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setAlerts([]);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function AnomalyHistory() {
   const handleAcknowledge = async (id) => {
     try {
       await client.put(`/anomalies/${id}/acknowledge`);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'acknowledged', acknowledged_at: new Date().toISOString() } : a));
+      setAlerts(prev => (Array.isArray(prev) ? prev : []).map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'acknowledged', acknowledged_at: new Date().toISOString() } : a));
     } catch (e) {
       console.error(e);
     }
@@ -46,7 +49,7 @@ export default function AnomalyHistory() {
   const handleResolve = async (id) => {
     try {
       await client.put(`/anomalies/${id}/resolve`);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'resolved', resolved_at: new Date().toISOString() } : a));
+      setAlerts(prev => (Array.isArray(prev) ? prev : []).map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'resolved', resolved_at: new Date().toISOString() } : a));
     } catch (e) {
       console.error(e);
     }
@@ -61,6 +64,8 @@ export default function AnomalyHistory() {
     if (alert.status === 'acknowledged' || alert.is_acknowledged) return 'acknowledged';
     return 'created';
   };
+
+  const safeAlerts = Array.isArray(alerts) ? alerts : [];
 
   return (
     <PageWrapper title="Anomaly Alert History">
@@ -110,7 +115,7 @@ export default function AnomalyHistory() {
       <div className="glass-panel" style={{ padding: '24px' }}>
         {loading ? (
           <LoadingSkeleton type="table" count={5} />
-        ) : alerts.length === 0 ? (
+        ) : safeAlerts.length === 0 ? (
           <EmptyState icon={AlertTriangle} title="No alerts found" description="No anomaly alerts matching your filter criteria." />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -134,7 +139,7 @@ export default function AnomalyHistory() {
               <span style={{ textAlign: 'right' }}>Status & Action</span>
             </div>
 
-            {alerts.map(a => {
+            {safeAlerts.map(a => {
               const isExpanded = expandedId === a.id;
               const alertStatus = getAlertStatus(a);
 

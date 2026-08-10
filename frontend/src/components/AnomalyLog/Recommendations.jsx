@@ -37,10 +37,12 @@ export default function Recommendations({ alertId, expanded = false }) {
     if (!expanded || !alertId) return;
     setLoading(true);
     client.get(`/enhanced/alerts/${alertId}/recommendations`)
-      .then(res => setRecs(res.data.recommendations || []))
+      .then(res => setRecs(Array.isArray(res.data?.recommendations) ? res.data.recommendations : (Array.isArray(res.data) ? res.data : [])))
       .catch(() => setRecs([]))
       .finally(() => setLoading(false));
   }, [alertId, expanded]);
+
+  const safeRecs = Array.isArray(recs) ? recs : [];
 
   if (!expanded) return null;
 
@@ -64,7 +66,7 @@ export default function Recommendations({ alertId, expanded = false }) {
               <div style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>Loading recommendations...</div>
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {recs.map((rec, idx) => {
+                {safeRecs.map((rec, idx) => {
                   const Icon = ICON_MAP[rec.icon] || Lightbulb;
                   const prio = PRIORITY_COLORS[rec.priority] || PRIORITY_COLORS.medium;
 

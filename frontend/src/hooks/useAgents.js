@@ -12,7 +12,7 @@ export function useAgents(intervalMs = 5000) {
       client.get('/dashboard/agents/active')
         .then(r => {
           if (isMounted) {
-            setAgents(r.data);
+            setAgents(Array.isArray(r.data) ? r.data : []);
             setLoading(false);
           }
         })

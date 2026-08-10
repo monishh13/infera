@@ -40,7 +40,7 @@ export default function ToolGraph({ sessionId }) {
 
       {loading ? (
         <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-dim)' }}>Rendering execution DAG...</div>
-      ) : !graphData || graphData.nodes.length === 0 ? (
+      ) : !graphData || !Array.isArray(graphData.nodes) || graphData.nodes.length === 0 ? (
         <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-dim)' }}>No tool calls recorded in this session</div>
       ) : (
         <div style={{ overflowX: 'auto', padding: '20px 0' }}>

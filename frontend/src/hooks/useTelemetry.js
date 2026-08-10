@@ -20,7 +20,7 @@ export function useTelemetry(agentId, intervalMs = 3000) {
       ])
         .then(([telRes, statsRes, relRes]) => {
           if (isMounted) {
-            setTelemetry(telRes.data);
+            setTelemetry(Array.isArray(telRes.data) ? telRes.data : []);
             setStats(statsRes.data);
             setReliability(relRes.data);
             setLoading(false);

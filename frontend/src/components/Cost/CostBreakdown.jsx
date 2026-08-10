@@ -5,11 +5,12 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 const COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
 
 export default function CostBreakdown({ events = [], totalCost = 0 }) {
+  const safeEvents = Array.isArray(events) ? events : [];
   // Aggregate cost by tool
   const toolCosts = {};
-  events.forEach(e => {
+  safeEvents.forEach(e => {
     const tool = e.tool_name || 'LLM Step';
-    const cost = e.cost_usd || (e.tokens_used * 0.000002);
+    const cost = e.cost_usd || ((e.tokens_used || 0) * 0.000002);
     toolCosts[tool] = (toolCosts[tool] || 0) + cost;
   });
 

@@ -50,7 +50,17 @@ export default function SessionDetail() {
     );
   }
 
-  const { stats, events } = detail;
+  const stats = detail?.stats || {
+    total_events: 0,
+    execution_duration_ms: 0,
+    avg_latency_ms: 0,
+    total_tokens: 0,
+    total_tools_used: 0,
+    total_cost_usd: 0,
+    retries: 0,
+    failure_count: 0
+  };
+  const events = Array.isArray(detail?.events) ? detail.events : [];
 
   return (
     <PageWrapper title={`Session — ${id}`}>

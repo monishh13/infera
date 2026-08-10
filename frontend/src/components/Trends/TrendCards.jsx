@@ -11,13 +11,19 @@ export default function TrendCards({ agentId }) {
     if (!agentId) return;
     client.get(`/enhanced/agents/${agentId}/trends`)
       .then(res => {
-        setTrends(res.data.trends || []);
+        const trendList = Array.isArray(res.data?.trends) ? res.data.trends : (Array.isArray(res.data) ? res.data : []);
+        setTrends(trendList);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setTrends([]);
+        setLoading(false);
+      });
   }, [agentId]);
 
-  if (loading || trends.length === 0) return null;
+  const safeTrends = Array.isArray(trends) ? trends : [];
+
+  if (loading || safeTrends.length === 0) return null;
 
   const getDirectionIcon = (direction) => {
     if (direction === 'increasing') return TrendingUp;
@@ -39,7 +45,7 @@ export default function TrendCards({ agentId }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-        {trends.map((trend, idx) => {
+        {safeTrends.map((trend, idx) => {
           const Icon = getDirectionIcon(trend.direction);
           const color = getColor(trend);
 

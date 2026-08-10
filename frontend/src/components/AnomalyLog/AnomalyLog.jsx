@@ -38,7 +38,7 @@ export default function AnomalyLog({ limit = 20 }) {
   const fetchAlerts = () => {
     client.get(`/anomalies/?limit=${limit}`)
       .then(res => {
-        const data = res.data;
+        const data = Array.isArray(res.data) ? res.data : [];
         const criticals = data.filter(a => a.severity === 'CRITICAL' && !a.is_acknowledged);
         if (criticals.length > prevCriticalCount.current) {
           playCriticalBeep();
@@ -47,7 +47,10 @@ export default function AnomalyLog({ limit = 20 }) {
         setAlerts(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setAlerts([]);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -59,7 +62,7 @@ export default function AnomalyLog({ limit = 20 }) {
   const handleAcknowledge = async (id) => {
     try {
       await client.put(`/anomalies/${id}/acknowledge`);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'acknowledged', acknowledged_at: new Date().toISOString() } : a));
+      setAlerts(prev => (Array.isArray(prev) ? prev : []).map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'acknowledged', acknowledged_at: new Date().toISOString() } : a));
     } catch (e) {
       console.error('Failed to acknowledge alert', e);
     }
@@ -68,7 +71,7 @@ export default function AnomalyLog({ limit = 20 }) {
   const handleResolve = async (id) => {
     try {
       await client.put(`/anomalies/${id}/resolve`);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'resolved', resolved_at: new Date().toISOString() } : a));
+      setAlerts(prev => (Array.isArray(prev) ? prev : []).map(a => a.id === id ? { ...a, is_acknowledged: true, status: 'resolved', resolved_at: new Date().toISOString() } : a));
     } catch (e) {
       console.error('Failed to resolve alert', e);
     }
@@ -95,6 +98,8 @@ export default function AnomalyLog({ limit = 20 }) {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
+  const safeAlerts = Array.isArray(alerts) ? alerts : [];
+
   return (
     <div className="glass-panel" style={{ padding: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -118,7 +123,7 @@ export default function AnomalyLog({ limit = 20 }) {
       </div>
 
       <div style={{ overflowX: 'auto' }}>
-        {alerts.length === 0 ? (
+        {safeAlerts.length === 0 ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.9rem' }}>
             {loading ? 'Checking anomaly alerts...' : 'No anomaly alerts recorded. All systems operating normally.'}
           </div>
@@ -144,7 +149,7 @@ export default function AnomalyLog({ limit = 20 }) {
               <span style={{ textAlign: 'right' }}>Status</span>
             </div>
 
-            {alerts.map(alert => {
+            {safeAlerts.map(alert => {
               const isCritical = alert.severity === 'CRITICAL';
               const isWarning = alert.severity === 'WARNING';
               const isExpanded = expandedId === alert.id;

@@ -105,17 +105,18 @@ export default function Dashboard() {
       {/* Active Agents Cards Grid */}
       <div style={{ marginBottom: '32px' }}>
         <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>Monitored Agent Fleet</h3>
-        {agentsLoading ? (
-          <LoadingSkeleton type="card" count={3} height="200px" />
-        ) : agents.length === 0 ? (
-          <EmptyState icon={Cpu} title="No active agents" description="Start the telemetry simulator or register an agent to see metrics." />
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-            {agents.map(agent => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
-          </div>
-        )}
+        {(() => {
+          const safeAgents = Array.isArray(agents) ? agents : [];
+          if (agentsLoading) return <LoadingSkeleton type="card" count={3} height="200px" />;
+          if (safeAgents.length === 0) return <EmptyState icon={Cpu} title="No active agents" description="Start the telemetry simulator or register an agent to see metrics." />;
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+              {safeAgents.map(agent => (
+                <AgentCard key={agent.id} agent={agent} />
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Token Chart */}

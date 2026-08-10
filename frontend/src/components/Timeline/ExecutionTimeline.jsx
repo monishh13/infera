@@ -17,7 +17,9 @@ const statusClass = (status, isAnomaly) => {
 };
 
 export default function ExecutionTimeline({ events = [], highlightIndex = -1 }) {
-  if (!events || events.length === 0) {
+  const safeEvents = Array.isArray(events) ? events : [];
+
+  if (!safeEvents || safeEvents.length === 0) {
     return (
       <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-dim)' }}>
         No events recorded for this session
@@ -36,7 +38,7 @@ export default function ExecutionTimeline({ events = [], highlightIndex = -1 }) 
         {/* Vertical connecting line */}
         <div className="timeline-line" />
 
-        {events.map((event, idx) => {
+        {safeEvents.map((event, idx) => {
           const cls = statusClass(event.status, event.is_anomaly);
           const isHighlighted = highlightIndex === idx;
           const isStart = idx === 0;

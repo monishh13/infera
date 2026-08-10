@@ -32,13 +32,18 @@ export default function AgentDetail() {
 
     client.get(`/agents/${id}/sessions`)
       .then(res => {
-        setSessions(res.data);
-        if (res.data.length > 0) {
-          setSelectedSessionId(res.data[0].id);
+        const sessList = Array.isArray(res.data) ? res.data : [];
+        setSessions(sessList);
+        if (sessList.length > 0) {
+          setSelectedSessionId(sessList[0].id);
         }
       })
-      .catch(() => {});
+      .catch(() => setSessions([]));
   }, [id]);
+
+  const safeSessions = Array.isArray(sessions) ? sessions : [];
+  const safeTelemetry = Array.isArray(telemetry) ? telemetry : [];
+  const safeTopReasons = Array.isArray(health?.top_reasons) ? health.top_reasons : [];
 
   return (
     <PageWrapper title={`Agent Detail — ${id}`}>
@@ -128,13 +133,13 @@ export default function AgentDetail() {
           </div>
 
           {/* Top Reasons Affecting Health */}
-          {health.top_reasons && health.top_reasons.length > 0 && (
+          {safeTopReasons.length > 0 && (
             <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px' }}>
               <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Key Factors Affecting Health Score
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {health.top_reasons.map((reason, idx) => (
+                {safeTopReasons.map((reason, idx) => (
                   <div
                     key={idx}
                     className={`reason-chip ${reason.severity}`}
@@ -219,14 +224,14 @@ export default function AgentDetail() {
               </Link>
             )}
           </div>
-          {sessions.length > 0 && (
+          {safeSessions.length > 0 && (
             <select
               className="input-field"
               style={{ width: 'auto', padding: '6px 12px', fontSize: '0.85rem' }}
               value={selectedSessionId || ''}
               onChange={e => setSelectedSessionId(e.target.value)}
             >
-              {sessions.map(s => (
+              {safeSessions.map(s => (
                 <option key={s.id} value={s.id}>Session {s.id} ({s.status})</option>
               ))}
             </select>
@@ -252,7 +257,7 @@ export default function AgentDetail() {
               </tr>
             </thead>
             <tbody>
-              {telemetry.map(e => (
+              {safeTelemetry.map(e => (
                 <tr key={e.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: e.is_anomaly ? 'rgba(239, 68, 68, 0.08)' : 'transparent' }}>
                   <td className="mono" style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{new Date(e.timestamp).toLocaleTimeString()}</td>
                   <td className="mono" style={{ padding: '10px 12px', color: 'var(--primary)', fontWeight: 600 }}>{e.tool_name || 'LLM Step'}</td>
