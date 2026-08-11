@@ -89,7 +89,7 @@ export default function Architecture() {
           animate={{ opacity: 1, y: 0 }}
           style={{ textAlign: 'center', marginBottom: '40px' }}
         >
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
             Infera Platform Architecture
           </h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)', maxWidth: '500px', margin: '0 auto' }}>
@@ -132,7 +132,7 @@ export default function Architecture() {
                   </div>
 
                   <div style={{ flex: 1 }}>
-                    <h3 className="mono" style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                    <h3 className="mono" style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                       {stage.label}
                     </h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', lineHeight: '1.5' }}>
@@ -151,23 +151,23 @@ export default function Architecture() {
                               borderRadius: '8px',
                               background: child.status === 'active' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(107, 114, 128, 0.08)',
                               border: child.status === 'active' ? '1px solid rgba(16, 185, 129, 0.25)' : '1px dashed rgba(107, 114, 128, 0.3)',
-                              opacity: child.status === 'active' ? 1 : 0.5,
+                              opacity: child.status === 'active' ? 1 : 0.7,
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                              <span style={{ fontWeight: 700, fontSize: '0.8rem', color: child.status === 'active' ? '#fff' : 'var(--text-dim)' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.8rem', color: child.status === 'active' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                                 {child.label}
                               </span>
                               {child.status === 'active' ? (
                                 <span style={{
                                   fontSize: '0.6rem', padding: '1px 6px', borderRadius: '4px',
-                                  background: 'rgba(16, 185, 129, 0.2)', color: 'var(--success)', fontWeight: 700,
+                                  background: 'rgba(16, 185, 129, 0.2)', color: 'var(--accent-green)', fontWeight: 700,
                                   textTransform: 'uppercase',
                                 }}>Active</span>
                               ) : (
                                 <span style={{
                                   fontSize: '0.6rem', padding: '1px 6px', borderRadius: '4px',
-                                  background: 'rgba(107, 114, 128, 0.2)', color: 'var(--text-dim)', fontWeight: 700,
+                                  background: 'rgba(107, 114, 128, 0.2)', color: 'var(--text-secondary)', fontWeight: 700,
                                   textTransform: 'uppercase',
                                 }}>
                                   <Lock size={8} style={{ display: 'inline', marginRight: '2px' }} />

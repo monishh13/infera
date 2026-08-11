@@ -105,6 +105,8 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
 
     # 5. Create TelemetryEvent
     ts = req.timestamp or datetime.utcnow()
+    if ts.tzinfo is not None:
+        ts = ts.replace(tzinfo=None)
     event = TelemetryEvent(
         agent_id=req.agent_id,
         session_id=req.session_id,
@@ -187,6 +189,9 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
         reliability_score=rel_res['score']
     )
 
+# Note: POST /ingest and POST /batch are intentionally unauthenticated in Phase 1 
+# to support lightweight SDK clients and background simulator callers.
+# API-key authentication (X-Infera-API-Key) is time-boxed for Phase 2.
 @router.post("/ingest", response_model=TelemetryIngestResponse)
 async def ingest_telemetry(req: TelemetryIngestRequest, db: AsyncSession = Depends(get_db)):
     return await process_single_telemetry(req, db)
@@ -200,13 +205,13 @@ async def batch_ingest_telemetry(req: TelemetryBatchRequest, db: AsyncSession = 
     return results
 
 @router.get("/{agent_id}", response_model=List[TelemetryRead])
-async def get_agent_telemetry(agent_id: str, limit: int = 50, offset: int = 0, db: AsyncSession = Depends(get_db)):
+async def get_agent_telemetry(agent_id: str, limit: int = 50, offset: int = 0, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(TelemetryEvent).where(TelemetryEvent.agent_id == agent_id).order_by(TelemetryEvent.timestamp.desc()).offset(offset).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
 
 @router.get("/{agent_id}/stats", response_model=TelemetryStatsRead)
-async def get_agent_telemetry_stats(agent_id: str, db: AsyncSession = Depends(get_db)):
+async def get_agent_telemetry_stats(agent_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(TelemetryEvent).where(TelemetryEvent.agent_id == agent_id)
     events = (await db.execute(stmt)).scalars().all()
     if not events:

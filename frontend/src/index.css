@@ -41,8 +41,8 @@
   /* Phase 3.8 High-Contrast Typography System */
   --text-primary: #111827;   /* Headings, page titles, KPI metrics */
   --text-secondary: #374151; /* KPI labels, nav labels, table text */
-  --text-tertiary: #6B7280;  /* Subtitles, descriptions, section headings */
-  --text-muted: #8B95A5;     /* Low-priority metadata */
+  --text-tertiary: #4B5563;  /* Subtitles, descriptions, section headings */
+  --text-muted: #6B7280;     /* Low-priority metadata */
 
   /* Legacy Tokens mapped to new contrast system */
   --bg-dark: var(--bg-base);
@@ -69,7 +69,7 @@
   --danger-muted: var(--accent-red-soft);
 
   --text-main: var(--text-primary);
-  --text-dim: var(--text-tertiary);
+  --text-dim: #374151;
 
   /* Typography Scale */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -338,6 +338,74 @@ body {
 
 .input-field:focus {
   border-color: var(--accent-primary);
+}
+
+/* Reason Chips */
+.reason-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+}
+.reason-chip.critical {
+  background: #FEF2F2;
+  border-color: #FCA5A5;
+}
+.reason-chip.warning {
+  background: #FFFBEB;
+  border-color: #FCD34D;
+}
+.reason-chip.info {
+  background: #EFF6FF;
+  border-color: #93C5FD;
+}
+
+/* Replay Controls & Buttons */
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+.replay-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.replay-btn.active {
+  background: var(--accent-primary);
+  color: #FFFFFF;
+  border-color: var(--accent-primary-hover);
+}
+.replay-progress {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.replay-progress-bar {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 3px;
+  transition: width 0.2s ease;
 }
 
 /* Operational Pulse Keyframes */

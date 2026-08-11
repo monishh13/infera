@@ -40,8 +40,8 @@ export default function TrendCards({ agentId }) {
   return (
     <div style={{ marginBottom: '32px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <Activity size={18} color="var(--accent)" />
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Metric Trends</h3>
+        <Activity size={18} color="var(--accent-primary)" />
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Metric Trends</h3>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
@@ -60,15 +60,15 @@ export default function TrendCards({ agentId }) {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color, opacity: 0.6 }} />
 
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', fontWeight: 500, marginBottom: '8px' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '8px' }}>
                 {trend.metric}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span className="mono" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+                <span className="mono" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                   {trend.current}
                 </span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{trend.unit}</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{trend.unit}</span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

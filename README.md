@@ -69,7 +69,7 @@ Infera solves these challenges by combining:
 |                                       v                                                           |
 |     +-------------------------------------------------------------------+                         |
 |     |            Rule-Based Alert Evaluator & Database Storage          |                         |
-|     |        (SQLite / PostgreSQL persistence via Async SQLAlchemy)     |                         |
+|     |             (PostgreSQL persistence via Async SQLAlchemy)         |                         |
 |     +-------------------------------------------------------------------+                         |
 +---------------------------------------------------------------------------------------------------+
 ```
@@ -164,6 +164,12 @@ docker-compose up -d --build
 ### Method 2: Local Development Environment
 
 #### Backend Setup
+
+> **Prerequisite — PostgreSQL**: The backend requires a running Postgres instance.
+> If you are running outside Docker, start the database container first:
+> ```bash
+> docker-compose up db -d
+> ```
 
 ```bash
 cd backend

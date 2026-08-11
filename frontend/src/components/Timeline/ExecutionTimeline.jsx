@@ -128,7 +128,7 @@ export default function ExecutionTimeline({ events = [], highlightIndex = -1 }) 
                 </div>
 
                 {/* Metrics row */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '11px', color: 'var(--text-primary)', fontWeight: 600 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Clock size={12} color="var(--text-tertiary)" />
                     <span className="mono">{event.timestamp ? new Date(event.timestamp).toLocaleTimeString() : '-'}</span>

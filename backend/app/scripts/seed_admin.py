@@ -19,10 +19,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("seed_admin")
 
 async def seed():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    from app.config import settings
+    import app.database as db_module
+    try:
+        async with db_module.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as err:
+        logger.error(
+            f"Seed: Cannot connect to PostgreSQL — {err}. "
+            "Ensure Postgres is running (docker-compose up db) and DATABASE_URL is correct."
+        )
+        raise
 
-    async with AsyncSessionLocal() as db:
+    async with db_module.AsyncSessionLocal() as db:
         # 1. Seed Admin User
         stmt = select(User).where(User.username == "admin")
         admin_user = (await db.execute(stmt)).scalars().first()

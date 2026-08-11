@@ -32,7 +32,7 @@ class IFModel:
         X = self.scaler.transform(feature_vector.reshape(1, -1))
         # score_samples: lower / more negative = more anomalous
         score = float(self.model.score_samples(X)[0])
-        is_anomaly = (score <= -0.3)
+        is_anomaly = bool(self.model.predict(X)[0] == -1)
         return score, is_anomaly
 
     def save(self, path: str):

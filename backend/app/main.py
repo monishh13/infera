@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from app.config import settings
 from app.database import engine, Base
 from app.routers import all_routers
@@ -15,9 +17,14 @@ logger = logging.getLogger("infera.main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Initializing Infera Backend Engine...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as err:
+        logger.warning(f"Database setup note ({err}). Retrying schema creation...")
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
     # Auto-seed admin user, default agents, and initial ML model if needed
     try:
         await seed()

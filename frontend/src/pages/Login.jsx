@@ -51,7 +51,7 @@ export default function Login() {
           }}>
             <Activity size={30} color="#fff" />
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>INFERA</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>INFERA</h1>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '4px' }}>
             AI Agent Monitoring & Anomaly Detection Platform
           </p>
@@ -61,9 +61,10 @@ export default function Login() {
           <div style={{
             padding: '12px 16px',
             borderRadius: '8px',
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: 'var(--danger)',
+            background: 'var(--accent-red-soft)',
+            border: '1px solid rgba(220, 38, 38, 0.25)',
+            color: 'var(--accent-red)',
+            fontWeight: 600,
             fontSize: '0.85rem',
             marginBottom: '20px'
           }}>
@@ -73,7 +74,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 500 }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
               Username
             </label>
             <div style={{ position: 'relative' }}>
@@ -89,7 +90,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 500 }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
               Password
             </label>
             <input 

@@ -1,26 +1,35 @@
+import os
+import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 
-# Engine setup supporting PostgreSQL asyncpg and SQLite aiosqlite
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
+logger = logging.getLogger("infera.database")
 
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=False,
-    future=True,
-    connect_args=connect_args
-)
+def get_engine(db_url: str):
+    return create_async_engine(
+        db_url,
+        echo=False,
+        future=True,
+        pool_pre_ping=True,
+    )
 
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False
-)
+def _init_db():
+    target_url = settings.DATABASE_URL
+    # Remap docker-compose service hostname to localhost when running outside Docker
+    if "db:5432" in target_url and not os.path.exists("/.dockerenv"):
+        target_url = target_url.replace("db:5432", "localhost:5432")
+    eng = get_engine(target_url)
+    session_factory = async_sessionmaker(
+        bind=eng,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False
+    )
+    return eng, session_factory
+
+engine, AsyncSessionLocal = _init_db()
 
 Base = declarative_base()
 

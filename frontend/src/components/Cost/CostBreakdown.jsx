@@ -24,19 +24,19 @@ export default function CostBreakdown({ events = [], totalCost = 0 }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <DollarSign size={20} color="var(--success)" />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Session Cost Breakdown</h3>
+            <DollarSign size={20} color="var(--accent-green)" />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Session Cost Breakdown</h3>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>API expense breakdown by tool invocation</p>
         </div>
-        <span className="mono" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--success)' }}>
+        <span className="mono" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-green)' }}>
           ${totalCost.toFixed(5)}
         </span>
       </div>
 
       <div style={{ height: '220px', width: '100%' }}>
         {chartData.length === 0 ? (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             No cost data available for this session
           </div>
         ) : (
@@ -56,8 +56,8 @@ export default function CostBreakdown({ events = [], totalCost = 0 }) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ background: '#111827', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-              <Legend wrapperStyle={{ fontSize: '11px', color: '#cbd5e1' }} />
+              <Tooltip contentStyle={{ background: '#FFFFFF', borderColor: 'var(--border-default)', borderRadius: '8px', color: '#111827', fontSize: '12px', boxShadow: 'var(--shadow-md)' }} />
+              <Legend wrapperStyle={{ fontSize: '11px', color: 'var(--text-secondary)' }} />
             </PieChart>
           </ResponsiveContainer>
         )}

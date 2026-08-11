@@ -54,15 +54,15 @@ export default function Dashboard() {
       title="Overview"
       description="Monitor AI agent execution, reliability, cost, and anomalies."
     >
-      {/* ROW 1: 3 Compact KPI Cards */}
-      <div style={{ marginBottom: 'var(--space-4)' }}>
+      {/* ROW 1: 4 Primary KPI Cards */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
         {loading ? (
-          <LoadingSkeleton type="metric" count={3} height="84px" />
+          <LoadingSkeleton type="metric" count={4} height="84px" />
         ) : (
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: 'var(--space-4)',
             }}
           >
@@ -70,21 +70,17 @@ export default function Dashboard() {
               title="Active Agents"
               value={overview.active_agents}
               subtitle="Monitored Fleet"
-              trend="● Active"
-              trendColor="var(--accent-green)"
-              sparkData={[2, 3, 3, 2, 3, 3, overview.active_agents]}
-              sparkColor="var(--accent-primary)"
+              trend={overview.active_agents > 0 ? "● Active" : "No agents online"}
+              trendColor={overview.active_agents > 0 ? "var(--accent-green)" : "var(--text-secondary)"}
               index={0}
             />
 
             <MetricCard
-              title="Alerts"
+              title="Alerts (24h)"
               value={overview.alerts_today}
-              subtitle="Last 24h"
-              trend={overview.alerts_today > 0 ? 'Active Incidents' : 'No active incidents'}
-              trendColor={overview.alerts_today > 0 ? 'var(--accent-amber)' : 'var(--text-secondary)'}
-              sparkData={[0, 1, 0, 0, 2, overview.alerts_today]}
-              sparkColor={overview.alerts_today > 0 ? 'var(--accent-amber)' : 'var(--accent-green)'}
+              subtitle="Detected Anomalies"
+              trend={overview.alerts_today > 0 ? 'Active Incidents' : 'Nominal'}
+              trendColor={overview.alerts_today > 0 ? 'var(--accent-amber)' : 'var(--accent-green)'}
               index={1}
             />
 
@@ -94,64 +90,20 @@ export default function Dashboard() {
               decimals={1}
               suffix="/100"
               subtitle="Predictive Index"
-              trend="+2.4% vs prev"
-              trendColor="var(--accent-green)"
-              sparkData={[94, 96, 95, 98, 97, overview.avg_reliability_score]}
-              sparkColor="var(--accent-green)"
+              trend={overview.avg_reliability_score >= 85 ? 'Healthy Fleet' : 'Degraded Performance'}
+              trendColor={overview.avg_reliability_score >= 85 ? 'var(--accent-green)' : 'var(--accent-amber)'}
               index={2}
             />
-          </div>
-        )}
-      </div>
 
-      {/* ROW 2: 3 Compact KPI Cards */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        {loading ? (
-          <LoadingSkeleton type="metric" count={3} height="84px" />
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: 'var(--space-4)',
-            }}
-          >
             <MetricCard
               title="Cost Today"
               value={overview.cost_today_usd}
               prefix="$"
               decimals={4}
-              subtitle="API Usage"
-              trend="Today"
+              subtitle="API Execution Cost"
+              trend="24h Window"
               trendColor="var(--text-secondary)"
-              sparkData={[0.01, 0.02, 0.03, 0.04, overview.cost_today_usd]}
-              sparkColor="var(--accent-blue)"
               index={3}
-            />
-
-            <MetricCard
-              title="Token Allocation"
-              value={12480}
-              suffix=" tk"
-              subtitle="Current Velocity"
-              trend="2.1k / min"
-              trendColor="var(--text-secondary)"
-              sparkData={[8000, 9500, 11000, 12480]}
-              sparkColor="var(--accent-primary)"
-              index={4}
-            />
-
-            <MetricCard
-              title="Failure Rate"
-              value={0.02}
-              decimals={2}
-              suffix="%"
-              subtitle="Model Invocations"
-              trend="Nominal"
-              trendColor="var(--accent-green)"
-              sparkData={[0.05, 0.04, 0.03, 0.02]}
-              sparkColor="var(--accent-green)"
-              index={5}
             />
           </div>
         )}

@@ -72,13 +72,13 @@ export default function AnomalyHistory() {
       {/* Filter Controls */}
       <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Filter size={18} color="var(--primary)" />
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#fff' }}>Filter Anomaly Logs</h3>
+          <Filter size={18} color="var(--accent-primary)" />
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Filter Anomaly Logs</h3>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>Agent</label>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 500 }}>Agent</label>
             <select className="input-field" value={agentFilter} onChange={e => setAgentFilter(e.target.value)}>
               <option value="">All Agents</option>
               <option value="A001">Customer Support (A001)</option>
@@ -88,7 +88,7 @@ export default function AnomalyHistory() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>Severity</label>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 500 }}>Severity</label>
             <select className="input-field" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)}>
               <option value="">All Severities</option>
               <option value="INFO">INFO</option>
@@ -98,7 +98,7 @@ export default function AnomalyHistory() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>Anomaly Type</label>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 500 }}>Anomaly Type</label>
             <select className="input-field" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
               <option value="">All Types</option>
               <option value="token_spike">Token Spike</option>
@@ -122,13 +122,14 @@ export default function AnomalyHistory() {
             {/* Header */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '150px 80px 140px 100px 80px 1fr 140px',
+              gridTemplateColumns: '150px 70px 140px 85px 75px 1fr 190px',
               gap: '8px',
               padding: '10px 12px',
               fontSize: '0.75rem',
               fontWeight: 600,
-              color: 'var(--text-dim)',
-              borderBottom: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)',
+              borderBottom: '1px solid var(--border-default)',
+              background: 'var(--surface-2)',
             }}>
               <span>Timestamp</span>
               <span>Agent</span>
@@ -149,28 +150,28 @@ export default function AnomalyHistory() {
                     onClick={() => toggleExpand(a.id)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '150px 80px 140px 100px 80px 1fr 140px',
+                      gridTemplateColumns: '150px 70px 140px 85px 75px 1fr 190px',
                       gap: '8px',
                       padding: '12px',
-                      borderBottom: isExpanded ? 'none' : '1px solid rgba(255,255,255,0.04)',
-                      background: alertStatus === 'resolved' ? 'transparent' : 'rgba(255,255,255,0.02)',
-                      opacity: alertStatus === 'resolved' ? 0.5 : 1,
+                      borderBottom: isExpanded ? 'none' : '1px solid var(--border-subtle)',
+                      background: alertStatus === 'resolved' ? 'transparent' : 'var(--surface-1)',
+                      opacity: alertStatus === 'resolved' ? 0.6 : 1,
                       cursor: 'pointer',
                       alignItems: 'center',
                       fontSize: '0.85rem',
                     }}
                   >
-                    <span className="mono" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                    <span className="mono" style={{ color: 'var(--text-tertiary)', fontSize: '0.78rem' }}>
                       {new Date(a.created_at).toLocaleString()}
                     </span>
-                    <span className="mono" style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.78rem' }}>
+                    <span className="mono" style={{ color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.78rem' }}>
                       {a.agent_id}
                     </span>
                     <span>
                       <span style={{
                         display: 'inline-block', padding: '2px 8px', borderRadius: '4px',
-                        fontSize: '0.72rem', fontWeight: 600, background: 'rgba(255,255,255,0.06)',
-                        color: '#fff', fontFamily: 'var(--font-mono)'
+                        fontSize: '0.72rem', fontWeight: 600, background: 'var(--surface-2)',
+                        color: 'var(--text-primary)', border: '1px solid var(--border-default)', fontFamily: 'var(--font-mono)'
                       }}>
                         {a.alert_type}
                       </span>
@@ -180,17 +181,17 @@ export default function AnomalyHistory() {
                         {a.severity}
                       </span>
                     </span>
-                    <span className="mono" style={{ fontWeight: 700, color: a.anomaly_score < -0.5 ? 'var(--danger)' : 'var(--text-main)', fontSize: '0.78rem' }}>
+                    <span className="mono" style={{ fontWeight: 700, color: a.anomaly_score < -0.5 ? 'var(--accent-red)' : 'var(--text-primary)', fontSize: '0.78rem' }}>
                       {a.anomaly_score ? a.anomaly_score.toFixed(2) : '-'}
                     </span>
-                    <span style={{ color: 'var(--text-main)', fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: 'var(--text-primary)', fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {a.description}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                       {alertStatus === 'resolved' ? (
                         <StatusBadge status="resolved" size="sm" />
                       ) : alertStatus === 'acknowledged' ? (
-                        <div style={{ display: 'flex', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <StatusBadge status="acknowledged" size="sm" />
                           <button
                             onClick={(e) => { e.stopPropagation(); handleResolve(a.id); }}
@@ -209,16 +210,19 @@ export default function AnomalyHistory() {
                           Acknowledge
                         </button>
                       )}
-                      {isExpanded ? <ChevronUp size={14} color="var(--text-dim)" /> : <ChevronDown size={14} color="var(--text-dim)" />}
+                      {isExpanded ? <ChevronUp size={14} color="var(--text-tertiary)" /> : <ChevronDown size={14} color="var(--text-tertiary)" />}
                     </div>
                   </div>
 
                   {/* Expandable Reasons & Recommendations */}
                   {isExpanded && (
                     <div style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      borderRadius: '0 0 8px 8px',
-                      borderBottom: '1px solid var(--border-color)',
+                      background: 'var(--surface-2)',
+                      borderRadius: '0 0 var(--radius-md) var(--radius-md)',
+                      borderBottom: '1px solid var(--border-default)',
+                      borderLeft: '1px solid var(--border-default)',
+                      borderRight: '1px solid var(--border-default)',
+                      marginBottom: '8px',
                     }}>
                       <AnomalyReasons alertId={a.id} expanded={isExpanded} />
                       <Recommendations alertId={a.id} expanded={isExpanded} />

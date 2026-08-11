@@ -16,6 +16,8 @@ from app.models.telemetry import TelemetryEvent
 from app.models.alert import AnomalyAlert
 from app.models.reliability import AgentReliabilityScore
 from app.config import settings
+from app.models.user import User
+from app.services.auth_service import get_current_user
 
 router = APIRouter(prefix="/enhanced", tags=["Enhanced"])
 
@@ -114,7 +116,7 @@ def _compute_anomaly_reasons(alert: AnomalyAlert, event: Optional[TelemetryEvent
 
 
 @router.get("/alerts/{alert_id}/reasons")
-async def get_alert_reasons(alert_id: int, db: AsyncSession = Depends(get_db)):
+async def get_alert_reasons(alert_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns explainable reasons for why a specific anomaly alert was generated."""
     stmt = select(AnomalyAlert).where(AnomalyAlert.id == alert_id)
     alert = (await db.execute(stmt)).scalars().first()
@@ -147,7 +149,7 @@ async def get_alert_reasons(alert_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/alerts/recent-explained")
-async def get_recent_alerts_explained(limit: int = 20, db: AsyncSession = Depends(get_db)):
+async def get_recent_alerts_explained(limit: int = 20, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns recent alerts with pre-computed explanations."""
     stmt = select(AnomalyAlert).order_by(AnomalyAlert.created_at.desc()).limit(limit)
     alerts = (await db.execute(stmt)).scalars().all()
@@ -201,7 +203,7 @@ async def get_recent_alerts_explained(limit: int = 20, db: AsyncSession = Depend
 # ──────────────────────────────────────────────
 
 @router.get("/agents/{agent_id}/health")
-async def get_agent_health(agent_id: str, db: AsyncSession = Depends(get_db)):
+async def get_agent_health(agent_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns comprehensive agent health report."""
     stmt_ag = select(Agent).where(Agent.id == agent_id)
     agent = (await db.execute(stmt_ag)).scalars().first()
@@ -355,7 +357,7 @@ RECOMMENDATIONS_MAP = {
 
 
 @router.get("/alerts/{alert_id}/recommendations")
-async def get_alert_recommendations(alert_id: int, db: AsyncSession = Depends(get_db)):
+async def get_alert_recommendations(alert_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns context-aware recommended actions for a specific alert."""
     stmt = select(AnomalyAlert).where(AnomalyAlert.id == alert_id)
     alert = (await db.execute(stmt)).scalars().first()
@@ -375,7 +377,7 @@ async def get_alert_recommendations(alert_id: int, db: AsyncSession = Depends(ge
 # ──────────────────────────────────────────────
 
 @router.get("/agents/{agent_id}/trends")
-async def get_agent_trends(agent_id: str, db: AsyncSession = Depends(get_db)):
+async def get_agent_trends(agent_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Computes metric trends by comparing recent window vs historical baseline."""
     now = datetime.utcnow()
     recent_since = now - timedelta(hours=1)
@@ -494,7 +496,7 @@ async def get_agent_trends(agent_id: str, db: AsyncSession = Depends(get_db)):
 # ──────────────────────────────────────────────
 
 @router.get("/agents/compare")
-async def compare_agents(agent_ids: str = Query(..., description="Comma-separated agent IDs"), db: AsyncSession = Depends(get_db)):
+async def compare_agents(agent_ids: str = Query(..., description="Comma-separated agent IDs"), db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns comparison data for multiple agents."""
     ids = [a.strip() for a in agent_ids.split(",") if a.strip()]
 
@@ -554,7 +556,7 @@ async def compare_agents(agent_ids: str = Query(..., description="Comma-separate
 # ──────────────────────────────────────────────
 
 @router.get("/sessions/{session_id}/detail")
-async def get_session_detail(session_id: str, db: AsyncSession = Depends(get_db)):
+async def get_session_detail(session_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Returns comprehensive session detail with events and computed stats."""
     stmt = select(Session).where(Session.id == session_id)
     session = (await db.execute(stmt)).scalars().first()

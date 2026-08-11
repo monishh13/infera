@@ -88,25 +88,25 @@ export default function Settings() {
   return (
     <PageWrapper title="Settings & Anomaly Injector">
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '32px' }}>
-        
+
         {/* Panel 1: Per-Agent Threshold Editor */}
         <div className="glass-panel" style={{ padding: '28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <Sliders size={20} color="var(--primary)" />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>Agent Threshold Editor</h3>
+            <Sliders size={20} color="var(--accent-primary)" />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>Agent Threshold Editor</h3>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '24px' }}>
             Tune individual agent anomaly trigger boundaries
           </p>
 
           {saveMessage && (
-            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--success)', fontSize: '0.85rem', marginBottom: '16px' }}>
+            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-green)', fontWeight: 600, fontSize: '0.85rem', marginBottom: '16px' }}>
               <Check size={14} style={{ display: 'inline', marginRight: '6px' }} /> {saveMessage}
             </div>
           )}
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Select Target Agent</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '6px' }}>Select Target Agent</label>
             <select className="input-field" value={selectedAgentId} onChange={e => handleAgentSelect(e.target.value)}>
               {safeAgents.map(a => (
                 <option key={a.id} value={a.id}>{a.id} — {a.name}</option>
@@ -116,43 +116,43 @@ export default function Settings() {
 
           <form onSubmit={handleSaveThresholds} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Session Token Budget</label>
-              <input 
-                type="number" 
-                className="input-field mono" 
-                value={thresholds.token_budget} 
-                onChange={e => setThresholds({ ...thresholds, token_budget: parseInt(e.target.value, 10) })} 
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '4px' }}>Session Token Budget</label>
+              <input
+                type="number"
+                className="input-field mono"
+                value={thresholds.token_budget}
+                onChange={e => setThresholds({ ...thresholds, token_budget: parseInt(e.target.value, 10) })}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Latency Threshold (ms)</label>
-              <input 
-                type="number" 
-                className="input-field mono" 
-                value={thresholds.latency_threshold_ms} 
-                onChange={e => setThresholds({ ...thresholds, latency_threshold_ms: parseFloat(e.target.value) })} 
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '4px' }}>Latency Threshold (ms)</label>
+              <input
+                type="number"
+                className="input-field mono"
+                value={thresholds.latency_threshold_ms}
+                onChange={e => setThresholds({ ...thresholds, latency_threshold_ms: parseFloat(e.target.value) })}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Loop Iteration Threshold</label>
-              <input 
-                type="number" 
-                className="input-field mono" 
-                value={thresholds.loop_threshold} 
-                onChange={e => setThresholds({ ...thresholds, loop_threshold: parseInt(e.target.value, 10) })} 
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '4px' }}>Loop Iteration Threshold</label>
+              <input
+                type="number"
+                className="input-field mono"
+                value={thresholds.loop_threshold}
+                onChange={e => setThresholds({ ...thresholds, loop_threshold: parseInt(e.target.value, 10) })}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Failure Threshold Rate (0.0 - 1.0)</label>
-              <input 
-                type="number" 
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '4px' }}>Failure Threshold Rate (0.0 - 1.0)</label>
+              <input
+                type="number"
                 step="0.05"
-                className="input-field mono" 
-                value={thresholds.failure_threshold} 
-                onChange={e => setThresholds({ ...thresholds, failure_threshold: parseFloat(e.target.value) })} 
+                className="input-field mono"
+                value={thresholds.failure_threshold}
+                onChange={e => setThresholds({ ...thresholds, failure_threshold: parseFloat(e.target.value) })}
               />
             </div>
 
@@ -165,22 +165,22 @@ export default function Settings() {
         {/* Panel 2: Viva Demo On-Demand Anomaly Injector */}
         <div className="glass-panel" style={{ padding: '28px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <Zap size={20} color="var(--warning)" />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>Viva Demo Anomaly Injector</h3>
+            <Zap size={20} color="var(--accent-amber)" />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>Demo Anomaly Injector</h3>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '24px' }}>
             Inject real-time behavioral anomalies into running simulator streams for live demonstration
           </p>
 
           {injectMessage && (
-            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#fff', fontSize: '0.85rem', marginBottom: '16px' }}>
+            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--accent-primary-soft)', border: '1px solid var(--accent-primary-border)', color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.85rem', marginBottom: '16px' }}>
               {injectMessage}
             </div>
           )}
 
           <form onSubmit={handleInjectAnomaly} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Target Agent</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '4px' }}>Target Agent</label>
               <select className="input-field" value={injectAgentId} onChange={e => setInjectAgentId(e.target.value)}>
                 <option value="A001">Customer Support Agent (A001)</option>
                 <option value="A002">Deep Research Agent (A002)</option>
@@ -201,18 +201,18 @@ export default function Settings() {
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Duration (Number of Telemetry Events)</label>
-              <input 
-                type="number" 
-                className="input-field mono" 
-                value={durationEvents} 
-                onChange={e => setDurationEvents(e.target.value)} 
+              <input
+                type="number"
+                className="input-field mono"
+                value={durationEvents}
+                onChange={e => setDurationEvents(e.target.value)}
                 min="1"
                 max="20"
               />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={injectLoading}
               style={{
                 background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',

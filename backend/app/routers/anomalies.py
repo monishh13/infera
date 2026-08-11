@@ -19,7 +19,8 @@ async def list_anomalies(
     alert_type: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     stmt = select(AnomalyAlert).order_by(AnomalyAlert.created_at.desc())
     if agent_id:
@@ -34,13 +35,13 @@ async def list_anomalies(
     return result.scalars().all()
 
 @router.get("/unacknowledged", response_model=List[AlertRead])
-async def get_unacknowledged(db: AsyncSession = Depends(get_db)):
+async def get_unacknowledged(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AnomalyAlert).where(AnomalyAlert.is_acknowledged == False).order_by(AnomalyAlert.created_at.desc())
     result = await db.execute(stmt)
     return result.scalars().all()
 
 @router.get("/stats", response_model=AlertStats)
-async def get_anomaly_stats(db: AsyncSession = Depends(get_db)):
+async def get_anomaly_stats(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AnomalyAlert)
     alerts = (await db.execute(stmt)).scalars().all()
     
@@ -62,13 +63,13 @@ async def get_anomaly_stats(db: AsyncSession = Depends(get_db)):
     )
 
 @router.get("/{agent_id}", response_model=List[AlertRead])
-async def get_agent_anomalies(agent_id: str, limit: int = 50, db: AsyncSession = Depends(get_db)):
+async def get_agent_anomalies(agent_id: str, limit: int = 50, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AnomalyAlert).where(AnomalyAlert.agent_id == agent_id).order_by(AnomalyAlert.created_at.desc()).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
 
 @router.put("/{id}/acknowledge", response_model=AlertRead)
-async def acknowledge_alert(id: int, db: AsyncSession = Depends(get_db)):
+async def acknowledge_alert(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AnomalyAlert).where(AnomalyAlert.id == id)
     alert = (await db.execute(stmt)).scalars().first()
     if not alert:
@@ -76,14 +77,14 @@ async def acknowledge_alert(id: int, db: AsyncSession = Depends(get_db)):
     
     alert.is_acknowledged = True
     alert.acknowledged_at = datetime.utcnow()
-    alert.acknowledged_by = "admin"
+    alert.acknowledged_by = current_user.username
     alert.status = "acknowledged"
     await db.commit()
     await db.refresh(alert)
     return alert
 
 @router.put("/{id}/resolve", response_model=AlertRead)
-async def resolve_alert(id: int, db: AsyncSession = Depends(get_db)):
+async def resolve_alert(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AnomalyAlert).where(AnomalyAlert.id == id)
     alert = (await db.execute(stmt)).scalars().first()
     if not alert:
@@ -92,10 +93,10 @@ async def resolve_alert(id: int, db: AsyncSession = Depends(get_db)):
     if not alert.is_acknowledged:
         alert.is_acknowledged = True
         alert.acknowledged_at = datetime.utcnow()
-        alert.acknowledged_by = "admin"
+        alert.acknowledged_by = current_user.username
     
     alert.resolved_at = datetime.utcnow()
-    alert.resolved_by = "admin"
+    alert.resolved_by = current_user.username
     alert.status = "resolved"
     await db.commit()
     await db.refresh(alert)

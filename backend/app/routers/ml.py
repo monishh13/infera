@@ -11,10 +11,13 @@ from app.ml.feature_engineering import extract_features
 from app.ml.model_store import get_active_model
 from app.services.scheduler import retrain_models_job
 
+from app.models.user import User
+from app.services.auth_service import get_current_user
+
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
 @router.post("/retrain", response_model=MLRetrainResponse)
-async def trigger_retrain(db: AsyncSession = Depends(get_db)):
+async def trigger_retrain(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     await retrain_models_job()
     stmt = select(MLModelMetadata).order_by(MLModelMetadata.trained_at.desc())
     meta = (await db.execute(stmt)).scalars().first()
@@ -27,7 +30,7 @@ async def trigger_retrain(db: AsyncSession = Depends(get_db)):
     )
 
 @router.get("/model/stats", response_model=MLModelStats)
-async def get_model_stats(db: AsyncSession = Depends(get_db)):
+async def get_model_stats(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(MLModelMetadata).order_by(MLModelMetadata.trained_at.desc())
     meta = (await db.execute(stmt)).scalars().first()
 
@@ -52,7 +55,7 @@ async def get_model_stats(db: AsyncSession = Depends(get_db)):
     )
 
 @router.post("/predict", response_model=MLPredictResponse)
-async def predict_single_event(req: MLPredictRequest, db: AsyncSession = Depends(get_db)):
+async def predict_single_event(req: MLPredictRequest, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     event_dict = {
         'tokens_used': req.tokens_used,
         'latency_ms': req.latency_ms,

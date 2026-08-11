@@ -41,20 +41,20 @@ export default function AnomalyReasons({ alertId, expanded = false }) {
           transition={{ duration: 0.25 }}
           style={{ overflow: 'hidden' }}
         >
-          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)' }}>
-            <h5 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-default)' }}>
+            <h5 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Why This Alert Was Generated
             </h5>
 
             {loading ? (
-              <div style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>Analyzing anomaly reasons...</div>
+              <div style={{ padding: '12px', color: 'var(--text-tertiary)', fontSize: '0.8rem' }}>Analyzing anomaly reasons...</div>
             ) : safeReasons.length === 0 ? (
-              <div style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>No detailed reasons available</div>
+              <div style={{ padding: '12px', color: 'var(--text-tertiary)', fontSize: '0.8rem' }}>No detailed reasons available</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {safeReasons.map((reason, idx) => {
                   const Icon = ICON_MAP[reason.icon] || AlertTriangle;
-                  const severityColor = reason.severity === 'critical' ? 'var(--danger)' : (reason.severity === 'warning' ? 'var(--warning)' : 'var(--primary)');
+                  const severityColor = reason.severity === 'critical' ? 'var(--accent-red)' : (reason.severity === 'warning' ? 'var(--accent-amber)' : 'var(--accent-primary)');
 
                   return (
                     <motion.div
@@ -68,10 +68,10 @@ export default function AnomalyReasons({ alertId, expanded = false }) {
                         <Icon size={14} color={severityColor} />
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, color: severityColor, marginBottom: '2px' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
                           {reason.label}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                           {reason.detail}
                         </div>
                       </div>

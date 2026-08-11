@@ -38,11 +38,11 @@ async def check_and_create_alert(
         threshold_val = 5.0
         actual_val = float(rolling_fail_count)
 
-    # 3. ML Anomaly checks (Isolation Forest score <= -0.3)
-    elif is_anomaly or anomaly_score <= -0.3:
+    # 3. ML Anomaly checks
+    elif is_anomaly or anomaly_score <= -0.5:
         if anomaly_score <= -0.7:
             severity = "CRITICAL"
-        elif anomaly_score <= -0.5:
+        elif anomaly_score <= -0.55:
             severity = "WARNING"
         else:
             severity = "INFO"

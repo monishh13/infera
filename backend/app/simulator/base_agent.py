@@ -41,7 +41,7 @@ class BaseAgent(ABC):
         event = self.generate_event()
         event["agent_id"] = self.agent_id
         event["session_id"] = self.session_id
-        event["timestamp"] = datetime.utcnow().isoformat() + "Z"
+        event["timestamp"] = datetime.utcnow().isoformat()
         
         if self._inject:
             event = self._inject(event)

@@ -165,20 +165,20 @@ export default function AgentDetail() {
       >
         <MetricCard
           title="Reliability Index"
-          value={health?.overall_health || reliability?.score || 100.0}
+          value={health?.overall_health ?? reliability?.score ?? 100.0}
           decimals={1}
           suffix="/100"
           subtitle="Composite Score"
-          trend={health?.trend || 'stable'}
-          trendColor="var(--accent-green)"
+          trend={health?.trend || ((reliability?.score ?? 100) >= 85 ? 'Healthy' : 'Degraded')}
+          trendColor={(reliability?.score ?? 100) >= 85 ? 'var(--accent-green)' : 'var(--accent-amber)'}
           index={0}
         />
         <MetricCard
           title="Average Latency"
-          value={health?.avg_latency || stats?.avg_latency_ms || 382}
+          value={health?.avg_latency ?? stats?.avg_latency_ms ?? 0}
           suffix=" ms"
           subtitle="Action Execution"
-          trend="Nominal"
+          trend="Real-time Avg"
           trendColor="var(--text-tertiary)"
           index={1}
         />
@@ -187,17 +187,17 @@ export default function AgentDetail() {
           value={Math.round((health?.tool_success_rate ?? stats?.success_rate ?? 1.0) * 100)}
           suffix="%"
           subtitle="Model Tool Invocations"
-          trend="Nominal"
-          trendColor="var(--accent-green)"
+          trend={(stats?.success_rate ?? 1.0) >= 0.9 ? 'Nominal' : 'Degraded'}
+          trendColor={(stats?.success_rate ?? 1.0) >= 0.9 ? 'var(--accent-green)' : 'var(--accent-amber)'}
           index={2}
         />
         <MetricCard
           title="Failure Probability"
-          value={Math.round((health?.failure_probability || 0.02) * 100)}
+          value={Math.round((health?.failure_probability ?? reliability?.predicted_failure_prob ?? 0.0) * 100)}
           suffix="%"
           subtitle="Next 10 Calls"
-          trend="Low Risk"
-          trendColor="var(--accent-green)"
+          trend={reliability?.risk_level ? `${reliability.risk_level} Risk` : 'Low Risk'}
+          trendColor={reliability?.risk_level === 'CRITICAL' ? 'var(--accent-red)' : 'var(--accent-green)'}
           index={3}
         />
       </div>

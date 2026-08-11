@@ -81,11 +81,11 @@ export default function SessionReplay({ events = [], onStepChange }) {
   return (
     <div className="glass-panel" style={{ padding: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Play size={16} color="var(--primary)" />
+        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Play size={16} color="var(--accent-primary)" />
           Session Replay
         </h4>
-        <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+        <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
           {currentStep + 1} / {totalSteps} steps
         </span>
       </div>
@@ -122,20 +122,20 @@ export default function SessionReplay({ events = [], onStepChange }) {
           style={{
             padding: '12px 16px',
             borderRadius: '8px',
-            background: events[currentStep].is_anomaly ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.08)',
-            border: `1px solid ${events[currentStep].is_anomaly ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+            background: events[currentStep].is_anomaly ? '#FEF2F2' : '#EFF6FF',
+            border: `1px solid ${events[currentStep].is_anomaly ? '#FCA5A5' : '#93C5FD'}`,
             fontSize: '0.8rem',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span className="mono" style={{ fontWeight: 700, color: 'var(--primary)' }}>
+            <span className="mono" style={{ fontWeight: 700, color: 'var(--accent-primary)' }}>
               {events[currentStep].tool_name}
             </span>
             <span className={`badge badge-${events[currentStep].status === 'SUCCESS' ? 'low' : 'critical'}`} style={{ fontSize: '0.65rem' }}>
               {events[currentStep].status}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '16px', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
             <span className="mono">{events[currentStep].latency_ms}ms</span>
             <span className="mono">{events[currentStep].tokens_used} tokens</span>
             <span className="mono">

@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.database import get_db, AsyncSessionLocal
 from app.models.agent import Agent
@@ -13,6 +14,9 @@ from app.simulator.customer_support import CustomerSupportAgent
 from app.simulator.research_agent import ResearchAgent
 from app.simulator.sales_agent import SalesAgent
 from app.simulator.anomaly_injector import get_anomaly_injector
+
+from app.models.user import User
+from app.services.auth_service import get_current_user
 
 logger = logging.getLogger("infera.simulator")
 router = APIRouter(prefix="/simulator", tags=["Simulator"])
@@ -72,11 +76,11 @@ async def _ensure_simulator_agents_exist(db: AsyncSession):
     await db.commit()
 
 @router.post("/start", response_model=SimulatorStatus)
-async def start_simulator(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def start_simulator(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     _init_simulators()
     await _ensure_simulator_agents_exist(db)
     if _simulator_state["running"]:
-        return await get_simulator_status()
+        return await get_simulator_status(current_user=current_user)
 
     _simulator_state["running"] = True
     _simulator_state["tasks"] = []
@@ -85,10 +89,10 @@ async def start_simulator(background_tasks: BackgroundTasks, db: AsyncSession = 
         task = asyncio.create_task(_agent_loop(agent_obj))
         _simulator_state["tasks"].append(task)
 
-    return await get_simulator_status()
+    return await get_simulator_status(current_user=current_user)
 
 @router.post("/stop", response_model=SimulatorStatus)
-async def stop_simulator():
+async def stop_simulator(current_user: User = Depends(get_current_user)):
     _simulator_state["running"] = False
     for agent_id, agent_obj in _simulator_state["agents"].items():
         agent_obj.stop()
@@ -97,10 +101,10 @@ async def stop_simulator():
         task.cancel()
     _simulator_state["tasks"] = []
 
-    return await get_simulator_status()
+    return await get_simulator_status(current_user=current_user)
 
 @router.get("/status", response_model=SimulatorStatus)
-async def get_simulator_status():
+async def get_simulator_status(current_user: User = Depends(get_current_user)):
     _init_simulators()
     agent_infos = []
     for agent_id, agent_obj in _simulator_state["agents"].items():
@@ -117,7 +121,7 @@ async def get_simulator_status():
     )
 
 @router.post("/inject-anomaly")
-async def inject_anomaly(req: SimulatorInjectRequest):
+async def inject_anomaly(req: SimulatorInjectRequest, current_user: User = Depends(get_current_user)):
     _init_simulators()
     agent_obj = _simulator_state["agents"].get(req.agent_id)
     if not agent_obj:

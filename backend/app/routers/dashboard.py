@@ -13,10 +13,13 @@ from app.models.reliability import AgentReliabilityScore
 from app.schemas.dashboard import DashboardOverview, ActiveAgentMetrics, CostMetricPoint, LatencyMetricPoint
 from app.schemas.alert import AlertRead
 
+from app.models.user import User
+from app.services.auth_service import get_current_user
+
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @router.get("/overview", response_model=DashboardOverview)
-async def get_dashboard_overview(db: AsyncSession = Depends(get_db)):
+async def get_dashboard_overview(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     # 1. Active agents count
     stmt_agents = select(func.count(Agent.id)).where(Agent.is_active == True)
     active_count = (await db.execute(stmt_agents)).scalar() or 0
@@ -53,7 +56,7 @@ async def get_dashboard_overview(db: AsyncSession = Depends(get_db)):
     )
 
 @router.get("/agents/active", response_model=List[ActiveAgentMetrics])
-async def get_active_agents_metrics(db: AsyncSession = Depends(get_db)):
+async def get_active_agents_metrics(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(Agent).where(Agent.is_active == True)
     agents = (await db.execute(stmt)).scalars().all()
 
@@ -96,7 +99,7 @@ async def get_active_agents_metrics(db: AsyncSession = Depends(get_db)):
     return result
 
 @router.get("/metrics/token-usage")
-async def get_token_usage_metrics(window: str = Query("1h", pattern="^(1h|6h|24h)$"), db: AsyncSession = Depends(get_db)):
+async def get_token_usage_metrics(window: str = Query("1h", pattern="^(1h|6h|24h)$"), db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     hours = 1 if window == "1h" else (6 if window == "6h" else 24)
     since_time = datetime.utcnow() - timedelta(hours=hours)
 
@@ -123,7 +126,7 @@ async def get_token_usage_metrics(window: str = Query("1h", pattern="^(1h|6h|24h
     return data_points
 
 @router.get("/metrics/costs", response_model=List[CostMetricPoint])
-async def get_cost_metrics(db: AsyncSession = Depends(get_db)):
+async def get_cost_metrics(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(Agent).where(Agent.is_active == True)
     agents = (await db.execute(stmt)).scalars().all()
 
@@ -139,7 +142,7 @@ async def get_cost_metrics(db: AsyncSession = Depends(get_db)):
     return result
 
 @router.get("/metrics/latency", response_model=List[LatencyMetricPoint])
-async def get_latency_metrics(db: AsyncSession = Depends(get_db)):
+async def get_latency_metrics(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(
         TelemetryEvent.tool_name,
         func.avg(TelemetryEvent.latency_ms).label("avg_lat")
@@ -157,7 +160,7 @@ async def get_latency_metrics(db: AsyncSession = Depends(get_db)):
     ]
 
 @router.get("/alerts/recent", response_model=List[AlertRead])
-async def get_recent_alerts(limit: int = 20, db: AsyncSession = Depends(get_db)):
+async def get_recent_alerts(limit: int = 20, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(AnomalyAlert).order_by(AnomalyAlert.created_at.desc()).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
