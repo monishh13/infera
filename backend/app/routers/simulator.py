@@ -13,6 +13,7 @@ from app.routers.telemetry import process_single_telemetry
 from app.simulator.customer_support import CustomerSupportAgent
 from app.simulator.research_agent import ResearchAgent
 from app.simulator.sales_agent import SalesAgent
+from app.simulator.real_llm_agent import RealLLMAgent
 from app.simulator.anomaly_injector import get_anomaly_injector
 
 from app.models.user import User
@@ -32,7 +33,8 @@ def _init_simulators():
         _simulator_state["agents"] = {
             "A001": CustomerSupportAgent(),
             "A002": ResearchAgent(),
-            "A003": SalesAgent()
+            "A003": SalesAgent(),
+            "A004": RealLLMAgent()
         }
 
 async def _agent_loop(agent_instance):
@@ -59,6 +61,7 @@ async def _ensure_simulator_agents_exist(db: AsyncSession):
         {"id": "A001", "name": "Customer Support Agent", "type": "customer_support", "token_budget": 2000},
         {"id": "A002", "name": "Deep Research Agent", "type": "research", "token_budget": 8000},
         {"id": "A003", "name": "Sales Representative Agent", "type": "sales", "token_budget": 4000},
+        {"id": "A004", "name": "Real LLM Agent (Groq)", "type": "real_llm", "token_budget": 5000},
     ]
     for data in sim_data:
         stmt = select(Agent).where(Agent.id == data["id"])
@@ -127,15 +130,59 @@ async def inject_anomaly(req: SimulatorInjectRequest, current_user: User = Depen
     if not agent_obj:
         raise HTTPException(status_code=404, detail=f"Agent {req.agent_id} not found in simulator")
 
-    try:
-        injector_fn = get_anomaly_injector(req.anomaly_type, duration=req.duration_events or 3)
-        agent_obj.inject_anomaly(injector_fn)
-        logger.info(f"Injected anomaly {req.anomaly_type} into agent {req.agent_id} for {req.duration_events} events")
-        return {
-            "message": f"Successfully injected anomaly '{req.anomaly_type}' into agent {req.agent_id}",
-            "agent_id": req.agent_id,
-            "anomaly_type": req.anomaly_type,
-            "duration_events": req.duration_events or 3
-        }
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+from pydantic import BaseModel
+
+class RealLLMExecuteRequest(BaseModel):
+    prompt: Optional[str] = None
+    adversarial_mode: Optional[bool] = False
+
+@router.post("/real-llm/execute")
+async def execute_real_llm_step(
+    req: RealLLMExecuteRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from datetime import datetime
+    _init_simulators()
+    await _ensure_simulator_agents_exist(db)
+    agent_obj = _simulator_state["agents"].get("A004")
+    if not agent_obj:
+        raise HTTPException(status_code=404, detail="Real LLM Agent A004 not initialized")
+
+    if not agent_obj.session_id:
+        agent_obj.start_session()
+
+    agent_obj.adversarial_mode = bool(req.adversarial_mode)
+
+    if req.prompt and not req.adversarial_mode:
+        raw_event = agent_obj.generate_event(custom_prompt=req.prompt)
+    else:
+        raw_event = agent_obj.generate_event()
+
+    raw_event["agent_id"] = "A004"
+    raw_event["session_id"] = agent_obj.session_id
+    raw_event["timestamp"] = datetime.utcnow().isoformat()
+
+    telemetry_req = TelemetryIngestRequest(**raw_event)
+    telemetry_res = await process_single_telemetry(telemetry_req, db)
+
+    prompt_label = req.prompt if (req.prompt and not req.adversarial_mode) else ("Adversarial Anomaly Prompt" if req.adversarial_mode else "Multi-Step Workflow Step")
+
+    return {
+        "agent_id": "A004",
+        "session_id": agent_obj.session_id,
+        "event_id": telemetry_res.event_id,
+        "prompt_used": prompt_label,
+        "tokens_used": raw_event.get("tokens_used", 0),
+        "latency_ms": raw_event.get("latency_ms", 0.0),
+        "tool_name": raw_event.get("tool_name", "custom_tool"),
+        "status": raw_event.get("status", "SUCCESS"),
+        "error_message": raw_event.get("error_message"),
+        "response_text": raw_event.get("response_text", ""),
+        "anomaly_score": telemetry_res.anomaly_score,
+        "is_anomaly": telemetry_res.is_anomaly,
+        "reliability_score": telemetry_res.reliability_score,
+        "alert_generated": telemetry_res.alert_generated,
+        "alert_id": telemetry_res.alert_id
+    }
+

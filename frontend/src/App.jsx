@@ -9,6 +9,7 @@ import Settings from './pages/Settings';
 import SessionDetail from './pages/SessionDetail';
 import Architecture from './pages/Architecture';
 import AgentComparison from './pages/AgentComparison';
+import RealAgentPlayground from './pages/RealAgentPlayground';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -29,6 +30,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/real-agent" element={<ProtectedRoute><RealAgentPlayground /></ProtectedRoute>} />
           <Route path="/agents/:id" element={<ProtectedRoute><AgentDetail /></ProtectedRoute>} />
           <Route path="/sessions/:id" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
           <Route path="/anomalies" element={<ProtectedRoute><AnomalyHistory /></ProtectedRoute>} />

@@ -11,12 +11,14 @@ import {
   GitCompare,
   Layers,
   User,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const NAV_ITEMS = [
   { section: 'MAIN' },
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { path: '/real-agent', label: 'Real LLM Agent', icon: Bot },
   { path: '/anomalies', label: 'Anomaly History', icon: AlertTriangle },
   { path: '/compare', label: 'Compare Agents', icon: GitCompare },
   { section: 'SYSTEM' },

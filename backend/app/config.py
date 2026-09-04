@@ -1,5 +1,9 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_PATH = ROOT_DIR / ".env"
 
 class Settings(BaseSettings):
     # PostgreSQL async URL — required for all environments (dev via docker-compose, prod)
@@ -24,10 +28,14 @@ class Settings(BaseSettings):
     SIMULATOR_TICK_INTERVAL_SEC: float = 2.0
     COST_PER_1K_TOKENS: float = 0.002
     
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.1-8b-instant"
+    
     API_V1_STR: str = "/api/v1"
     
     class Config:
-        env_file = ".env"
+        env_file = (str(ENV_PATH), ".env", "../.env")
         extra = "ignore"
 
 settings = Settings()
+

@@ -10,6 +10,7 @@ from app.models.agent import Agent
 from app.models.session import Session
 from app.models.telemetry import TelemetryEvent
 from app.models.reliability import AgentReliabilityScore
+from app.models.alert import AnomalyAlert
 from app.services.auth_service import get_password_hash
 from app.ml.isolation_forest import IFModel
 from app.ml.model_store import set_active_model
@@ -46,7 +47,7 @@ async def seed():
             await db.flush()
             logger.info("Admin user 'admin' created with password 'secret123'")
 
-        # 2. Seed Initial 3 Agents
+        # 2. Seed Initial 4 Agents
         agents_data = [
             {
                 "id": "A001",
@@ -77,6 +78,17 @@ async def seed():
                 "description": "Manages CRM leads, scores prospect interactions, and schedules follow-up meetings.",
                 "token_budget": 4000,
                 "latency_threshold_ms": 2500.0,
+                "failure_threshold": 0.25,
+                "loop_threshold": 10,
+                "owner_id": admin_user.id
+            },
+            {
+                "id": "A004",
+                "name": "Real LLM Agent (Groq)",
+                "type": "real_llm",
+                "description": "Real LLM-backed agent using Groq free API (llama-3.1-8b-instant) for multi-step tool execution.",
+                "token_budget": 5000,
+                "latency_threshold_ms": 3000.0,
                 "failure_threshold": 0.25,
                 "loop_threshold": 10,
                 "owner_id": admin_user.id
