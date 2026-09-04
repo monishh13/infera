@@ -3,14 +3,14 @@
 [![Build Status](https://img.shields.io/badge/Status-Active%20Research-blue.svg)](https://github.com/infera/infera)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.0+-61DAFB.svg)](https://reactjs.org/)
 
 ---
 
 ## Abstract
 
-**Infera** is a real-time telemetry tracing, explainable anomaly detection, and reliability engineering platform engineered specifically for autonomous Large Language Model (LLM) agents. 
+**Infera** is a real-time telemetry tracing, explainable anomaly detection, and reliability engineering platform engineered specifically for autonomous Large Language Model (LLM) agents.
 
 Conventional Application Performance Monitoring (APM) tools (e.g., Datadog, Prometheus) rely on static call graphs, fixed error rate thresholds, and predictable compute metrics. Autonomous LLM agents invalidate these assumptions due to non-deterministic reasoning paths, unexpected token consumption bursts, infinite tool execution loops, dependency failure cascades, and semantic drift.
 
@@ -20,8 +20,9 @@ Infera solves these challenges by combining:
 - **Unsupervised Anomaly Detection Architecture**: Employs online **Isolation Forest** (`IFModel`) and **Local Outlier Factor** (`LOFModel`) algorithms trained in-process without labeled failure datasets.
 - **Explainable Anomaly Detection Engine**: Generates root-cause diagnostic explanations comparing anomalous spans against historical agent baselines.
 - **Context-Aware Action Recommendations Engine**: Provides priority-ranked remediation guidance (`critical`, `high`, `medium`, `low`) for operational alerts.
-- **Agent Reliability Score (ARS)**: Quantitative composite metric ($0 \text{--} 100$) evaluating agent stability and estimating failure probabilities $P(\text{failure})$.
+- **Agent Reliability Score (ARS)**: Quantitative composite metric ($0\text{--}100$) evaluating agent stability and estimating failure probabilities $P(\text{failure})$.
 - **Session Replay & Step Trace Analysis**: Interactive step-by-step trace playback displaying per-step latencies, token consumption, and USD cost breakdown.
+- **Real LLM Agent (A004)**: Live Groq API-backed agent (`llama-3.1-8b-instant`) emitting genuine telemetry from real multi-step LLM calls, with an interactive **Real Agent Playground** in the dashboard.
 - **Obsidian Dark Real-Time Analytics Command Center**: React 18 / Vite dashboard providing real-time visual telemetry, Directed Acyclic Graph (DAG) state representations of tool interactions, side-by-side agent comparison matrices, and metric trend analysis.
 
 ---
@@ -33,27 +34,25 @@ Infera solves these challenges by combining:
 |                                      INFERA PLATFORM ARCHITECTURE                                 |
 +---------------------------------------------------------------------------------------------------+
 |                                                                                                   |
-|  +------------------------+      +------------------------+      +-----------------------------+  |
-|  | Multi-Agent Simulator  |      | External Python Agent  |      |  React Observability Hub    |  |
-|  | (Source: "simulator")  |      | (Using infera-sdk)     |      | (Session Replay & DAGs)     |  |
-|  +------------------------+      +------------------------+      +-----------------------------+  |
-|               |                              |                                  ^                 |
-|               v                              v                                  |                 |
-|     +-------------------------------------------------------------------+       | (REST / Poll)   |
-|     |           FastAPI Ingress Endpoint (Idempotency Check)            |       |                 |
-|     |           POST /api/v1/telemetry/ingest (external_event_id)       |-------+                 |
-|     +-------------------------------------------------------------------+                         |
+|  +------------------------+   +------------------------+   +----------------------------+         |
+|  | Multi-Agent Simulator  |   | External Python Agent  |   |  React Observability Hub   |         |
+|  | A001/A002/A003/A004    |   | (Using infera-sdk)     |   | (Session Replay & DAGs)   |         |
+|  +------------------------+   +------------------------+   +----------------------------+         |
+|               |                          |                              ^                         |
+|               v                          v                              |                         |
+|     +-------------------------------------------------------------------+   (REST / Poll)         |
+|     |           FastAPI Ingress Endpoint (Idempotency Check)            +--------+                |
+|     |      POST /api/v1/telemetry/ingest  (external_event_id)           |        |                |
+|     +-------------------------------------------------------------------+        |                |
 |                                       |                                                           |
 |                                       v                                                           |
 |     +-------------------------------------------------------------------+                         |
 |     |          Session State Manager & Source Attribution Engine        |                         |
-|     |        (Attributes source: "simulator" | "sdk", Updates Session)    |                         |
 |     +-------------------------------------------------------------------+                         |
 |                                       |                                                           |
 |                                       v                                                           |
 |     +-------------------------------------------------------------------+                         |
 |     |              10D Feature Engineering Matrix Engine                |                         |
-|     |    (Tokens, Latency, Z-Scores, Velocity, Failure Rate, Age Ratio)  |                         |
 |     +-------------------------------------------------------------------+                         |
 |                                       |                                                           |
 |       +-------------------------------+-------------------------------+                           |
@@ -128,10 +127,12 @@ infera.flush()
 3. **Unsupervised Isolation Forest Engine**: In-process ML detection trained on dense feature vectors to flag non-deterministic runtime anomalies without labeled datasets.
 4. **Explainable Anomaly Reasons Engine**: Diagnostics module generating root-cause explanations (e.g. `Token usage 8.2× higher than baseline`, `IF score = -0.74`).
 5. **Context-Aware Recommendations Engine**: Actionable remediation steps with priority levels (`critical`, `high`, `medium`, `low`).
-6. **Agent Reliability Score (ARS)**: Quantitative composite index ($0 \text{--} 100$) evaluating agent stability:
+6. **Agent Reliability Score (ARS)**: Quantitative composite index ($0\text{--}100$) evaluating agent stability:
    $$\text{ARS} = 0.40 \cdot S_{\text{tool}} + 0.20 \cdot S_{\text{token}} + 0.20 \cdot S_{\text{latency}} + 0.20 \cdot S_{\text{loop}}$$
 7. **Session Replay & Step Trace Visualizer**: Step-by-step playback with execution timing, token usage, USD cost, and tool DAG highlights.
-8. **Multi-Agent Simulation & Perturbation Framework**: Synthetic agent generator ($A_{001}, A_{002}, A_{003}$) with explicit fault injection (`token_spike`, `infinite_loop`, `high_latency`, `tool_failure_cascade`, `behavioral_drift`).
+8. **Multi-Agent Simulation & Perturbation Framework**: Synthetic agent generator ($A_{001}$–$A_{003}$) with explicit fault injection (`token_spike`, `infinite_loop`, `high_latency`, `tool_failure_cascade`, `behavioral_drift`).
+9. **Real LLM Agent Playground**: Live Groq API integration (Agent A004) with adversarial mode and custom prompt support — emits genuine token, latency, and success telemetry.
+10. **Periodic ML Retraining**: APScheduler-driven background job retrains the Isolation Forest every 30 minutes on the latest 5,000 telemetry events.
 
 ---
 
@@ -150,6 +151,7 @@ infera.flush()
 ```bash
 # 1. Environment Configuration
 cp .env.example .env
+# Optional: set GROQ_API_KEY in .env to enable Real LLM Agent (A004)
 
 # 2. Build and Deploy Containers
 docker-compose up -d --build
@@ -165,8 +167,8 @@ docker-compose up -d --build
 
 #### Backend Setup
 
-> **Prerequisite — PostgreSQL**: The backend requires a running Postgres instance.
-> If you are running outside Docker, start the database container first:
+> **Prerequisite — PostgreSQL**: The backend requires a running PostgreSQL instance.
+> Start the database container first:
 > ```bash
 > docker-compose up db -d
 > ```
@@ -202,6 +204,7 @@ python sdk/examples/basic_agent.py
 cd frontend
 npm install
 npm run dev
+# Dev server: http://localhost:5173
 ```
 
 ---
@@ -215,46 +218,49 @@ Infera/
 │   │   ├── main.py              # Application entry point and lifecycle manager
 │   │   ├── config.py            # Platform configuration and environment binding
 │   │   ├── database.py          # Asynchronous ORM engine setup
-│   │   ├── models/              # Relational schemas (User, Agent, Telemetry, Alert)
+│   │   ├── models/              # Relational schemas (User, Agent, Session, TelemetryEvent, AnomalyAlert, AgentReliabilityScore, MLModelMetadata)
 │   │   ├── schemas/             # Data validation schemas (Pydantic)
-│   │   ├── services/            # Alert evaluation, auth, scheduler
-│   │   ├── ml/                  # 10D feature engineering & Isolation Forest estimator
-│   │   ├── simulator/           # Synthetic agent telemetry and fault injectors
-│   │   ├── routers/             # API endpoints (telemetry, enhanced, simulator, ml)
+│   │   ├── services/            # Alert evaluation, auth, APScheduler retraining
+│   │   ├── ml/                  # 10D feature engineering, Isolation Forest, LOF, ARS, model store
+│   │   ├── simulator/           # Synthetic agents (A001-A003) + Real LLM Agent (A004) + fault injectors
+│   │   ├── routers/             # API endpoints (auth, agents, sessions, telemetry, anomalies, dashboard, simulator, ml, enhanced)
 │   │   └── scripts/             # Administrative data seeding scripts
 │   ├── alembic/                 # Database schema migration scripts
 │   ├── requirements.txt         # Backend Python dependencies
 │   └── Dockerfile               # Backend container recipe
 ├── sdk/
-│   ├── infera_sdk/              # Official Python Telemetry & Tracing SDK
-│   │   ├── client.py            # Client entry point
-│   │   ├── tracer.py            # Context manager & span collector
-│   │   ├── transport.py         # Asynchronous non-blocking HTTP transport
-│   │   └── config.py            # Environment configuration
+│   ├── infera_sdk/              # Official Python Telemetry & Tracing SDK (v0.1.0)
+│   │   ├── client.py            # Infera client entry point
+│   │   ├── tracer.py            # AgentTracer, SessionTracer, SpanTracer context managers
+│   │   ├── transport.py         # Asynchronous non-blocking HTTP batch transport
+│   │   ├── models.py            # TelemetrySpan Pydantic model
+│   │   └── config.py            # Environment configuration & metadata redaction
 │   ├── examples/                # Example agent implementation scripts
 │   ├── pyproject.toml           # SDK package manifest
 │   └── README.md                # SDK documentation
 ├── frontend/
 │   ├── src/
 │   │   ├── api/                 # Axios HTTP client & interceptors
-│   │   ├── context/             # Global Auth state provider
+│   │   ├── context/             # Global Auth state provider (JWT)
 │   │   ├── hooks/               # Custom streaming telemetry hooks
-│   │   ├── components/          # Reusable UI components (AnomalyLog, Timeline, DAGs)
-│   │   └── pages/               # Views (Dashboard, AgentDetail, SessionDetail, Comparison)
+│   │   ├── components/          # Reusable UI components (AgentCard, AnomalyLog, Charts, Health, ReliabilityGauge, Timeline, ToolGraph, Trends, UI)
+│   │   └── pages/               # Views (Dashboard, AgentDetail, SessionDetail, AnomalyHistory, AgentComparison, RealAgentPlayground, Architecture, Settings)
 │   ├── package.json             # Frontend dependency manifest
 │   ├── vite.config.js           # Vite build configuration
-│   └── Dockerfile               # Frontend container recipe
-├── docker-compose.yml           # Multi-container orchestration specification
+│   └── Dockerfile               # Frontend container recipe (Nginx)
+├── docs/                        # Extended docs, demo notes, evaluation results, research diary
+├── docker-compose.yml           # Production multi-container orchestration
+├── docker-compose.dev.yml       # Dev-only DB container
 ├── DOCUMENTATION.md             # Complete technical architecture documentation
 ├── .env.example                 # Environment configuration template
-└── README.md                    # Project landing README
+└── README.md                    # Project landing README (this file)
 ```
 
 ---
 
 ## Technical Documentation
 
-For complete, in-depth architectural specs, mathematical derivations, API schemas, and feature engineering vector definitions, view [DOCUMENTATION.md](DOCUMENTATION.md).
+For complete, in-depth architectural specs, mathematical derivations, full API schemas, and feature engineering vector definitions, view [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 
