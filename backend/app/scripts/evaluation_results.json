@@ -1,200 +1,200 @@
 {
-  "timestamp": "2026-08-11T10:15:25.520478",
+  "timestamp": "2026-09-09T12:37:16.007055",
   "total_events_evaluated": 1050,
   "injected_anomalies_count": 250,
-  "avg_detection_latency_ms": 23.901,
-  "idle_false_positive_rate": 0.041,
+  "avg_detection_latency_ms": 17.589,
+  "idle_false_positive_rate": 0.032,
   "overall": {
     "Isolation Forest": {
-      "precision": 0.8282,
-      "recall": 0.752,
-      "f1": 0.7883,
-      "fpr": 0.0488,
-      "tp": 188,
-      "fp": 39,
-      "fn": 62,
-      "tn": 761
+      "precision": 0.928,
+      "recall": 0.98,
+      "f1": 0.9533,
+      "fpr": 0.0238,
+      "tp": 245,
+      "fp": 19,
+      "fn": 5,
+      "tn": 781
     },
     "LOF Baseline": {
-      "precision": 0.7591,
-      "recall": 0.92,
-      "f1": 0.8318,
-      "fpr": 0.0912,
-      "tp": 230,
-      "fp": 73,
-      "fn": 20,
-      "tn": 727
+      "precision": 0.9462,
+      "recall": 0.984,
+      "f1": 0.9647,
+      "fpr": 0.0175,
+      "tp": 246,
+      "fp": 14,
+      "fn": 4,
+      "tn": 786
     },
     "Threshold Rules": {
-      "precision": 0.7129,
-      "recall": 0.596,
-      "f1": 0.6492,
-      "fpr": 0.075,
-      "tp": 149,
-      "fp": 60,
-      "fn": 101,
-      "tn": 740
+      "precision": 0.7806,
+      "recall": 0.968,
+      "f1": 0.8643,
+      "fpr": 0.085,
+      "tp": 242,
+      "fp": 68,
+      "fn": 8,
+      "tn": 732
     }
   },
   "per_type": {
     "token_spike": {
       "Isolation Forest": {
-        "precision": 0.5618,
+        "precision": 0.7246,
         "recall": 1.0,
-        "f1": 0.7194,
-        "fpr": 0.0488,
+        "f1": 0.8403,
+        "fpr": 0.0238,
         "tp": 50,
-        "fp": 39,
+        "fp": 19,
         "fn": 0,
-        "tn": 761
+        "tn": 781
       },
       "LOF Baseline": {
-        "precision": 0.4065,
+        "precision": 0.7812,
         "recall": 1.0,
-        "f1": 0.578,
-        "fpr": 0.0912,
+        "f1": 0.8772,
+        "fpr": 0.0175,
         "tp": 50,
-        "fp": 73,
+        "fp": 14,
         "fn": 0,
-        "tn": 727
+        "tn": 786
       },
       "Threshold Rules": {
-        "precision": 0.3939,
-        "recall": 0.78,
-        "f1": 0.5235,
-        "fpr": 0.075,
-        "tp": 39,
-        "fp": 60,
-        "fn": 11,
-        "tn": 740
+        "precision": 0.4237,
+        "recall": 1.0,
+        "f1": 0.5952,
+        "fpr": 0.085,
+        "tp": 50,
+        "fp": 68,
+        "fn": 0,
+        "tn": 732
       }
     },
     "infinite_loop": {
       "Isolation Forest": {
-        "precision": 0.5618,
+        "precision": 0.7246,
         "recall": 1.0,
-        "f1": 0.7194,
-        "fpr": 0.0488,
+        "f1": 0.8403,
+        "fpr": 0.0238,
         "tp": 50,
-        "fp": 39,
+        "fp": 19,
         "fn": 0,
-        "tn": 761
+        "tn": 781
       },
       "LOF Baseline": {
-        "precision": 0.4065,
+        "precision": 0.7812,
         "recall": 1.0,
-        "f1": 0.578,
-        "fpr": 0.0912,
+        "f1": 0.8772,
+        "fpr": 0.0175,
         "tp": 50,
-        "fp": 73,
+        "fp": 14,
         "fn": 0,
-        "tn": 727
+        "tn": 786
       },
       "Threshold Rules": {
-        "precision": 0.4545,
+        "precision": 0.4237,
         "recall": 1.0,
-        "f1": 0.625,
-        "fpr": 0.075,
+        "f1": 0.5952,
+        "fpr": 0.085,
         "tp": 50,
-        "fp": 60,
+        "fp": 68,
         "fn": 0,
-        "tn": 740
+        "tn": 732
       }
     },
     "high_latency": {
       "Isolation Forest": {
-        "precision": 0.4583,
-        "recall": 0.66,
-        "f1": 0.541,
-        "fpr": 0.0488,
-        "tp": 33,
-        "fp": 39,
-        "fn": 17,
-        "tn": 761
+        "precision": 0.7246,
+        "recall": 1.0,
+        "f1": 0.8403,
+        "fpr": 0.0238,
+        "tp": 50,
+        "fp": 19,
+        "fn": 0,
+        "tn": 781
       },
       "LOF Baseline": {
-        "precision": 0.4065,
+        "precision": 0.7812,
         "recall": 1.0,
-        "f1": 0.578,
-        "fpr": 0.0912,
+        "f1": 0.8772,
+        "fpr": 0.0175,
         "tp": 50,
-        "fp": 73,
+        "fp": 14,
         "fn": 0,
-        "tn": 727
+        "tn": 786
       },
       "Threshold Rules": {
-        "precision": 0.0625,
-        "recall": 0.08,
-        "f1": 0.0702,
-        "fpr": 0.075,
-        "tp": 4,
-        "fp": 60,
-        "fn": 46,
-        "tn": 740
+        "precision": 0.4237,
+        "recall": 1.0,
+        "f1": 0.5952,
+        "fpr": 0.085,
+        "tp": 50,
+        "fp": 68,
+        "fn": 0,
+        "tn": 732
       }
     },
     "tool_failure_cascade": {
       "Isolation Forest": {
-        "precision": 0.4507,
-        "recall": 0.64,
-        "f1": 0.5289,
-        "fpr": 0.0488,
-        "tp": 32,
-        "fp": 39,
-        "fn": 18,
-        "tn": 761
+        "precision": 0.7031,
+        "recall": 0.9,
+        "f1": 0.7895,
+        "fpr": 0.0238,
+        "tp": 45,
+        "fp": 19,
+        "fn": 5,
+        "tn": 781
       },
       "LOF Baseline": {
-        "precision": 0.3113,
-        "recall": 0.66,
-        "f1": 0.4231,
-        "fpr": 0.0912,
-        "tp": 33,
-        "fp": 73,
-        "fn": 17,
-        "tn": 727
+        "precision": 0.7667,
+        "recall": 0.92,
+        "f1": 0.8364,
+        "fpr": 0.0175,
+        "tp": 46,
+        "fp": 14,
+        "fn": 4,
+        "tn": 786
       },
       "Threshold Rules": {
-        "precision": 0.4545,
+        "precision": 0.4237,
         "recall": 1.0,
-        "f1": 0.625,
-        "fpr": 0.075,
+        "f1": 0.5952,
+        "fpr": 0.085,
         "tp": 50,
-        "fp": 60,
+        "fp": 68,
         "fn": 0,
-        "tn": 740
+        "tn": 732
       }
     },
     "behavioral_drift": {
       "Isolation Forest": {
-        "precision": 0.371,
-        "recall": 0.46,
-        "f1": 0.4107,
-        "fpr": 0.0488,
-        "tp": 23,
-        "fp": 39,
-        "fn": 27,
-        "tn": 761
+        "precision": 0.7246,
+        "recall": 1.0,
+        "f1": 0.8403,
+        "fpr": 0.0238,
+        "tp": 50,
+        "fp": 19,
+        "fn": 0,
+        "tn": 781
       },
       "LOF Baseline": {
-        "precision": 0.3917,
-        "recall": 0.94,
-        "f1": 0.5529,
-        "fpr": 0.0912,
-        "tp": 47,
-        "fp": 73,
-        "fn": 3,
-        "tn": 727
+        "precision": 0.7812,
+        "recall": 1.0,
+        "f1": 0.8772,
+        "fpr": 0.0175,
+        "tp": 50,
+        "fp": 14,
+        "fn": 0,
+        "tn": 786
       },
       "Threshold Rules": {
-        "precision": 0.0909,
-        "recall": 0.12,
-        "f1": 0.1034,
-        "fpr": 0.075,
-        "tp": 6,
-        "fp": 60,
-        "fn": 44,
-        "tn": 740
+        "precision": 0.3818,
+        "recall": 0.84,
+        "f1": 0.525,
+        "fpr": 0.085,
+        "tp": 42,
+        "fp": 68,
+        "fn": 8,
+        "tn": 732
       }
     }
   }

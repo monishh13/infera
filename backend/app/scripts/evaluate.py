@@ -75,6 +75,7 @@ def inject_anomaly_event(anomaly_type: str, agent_type: str = "A001") -> Dict[st
     return base
 
 def run_evaluation():
+    np.random.seed(42)
     print("=" * 60)
     print("INFERA EVALUATION HARNESS - BENCHMARK RUN")
     print("=" * 60)
@@ -98,12 +99,36 @@ def run_evaluation():
 
     lof_model = LOFModel()
     lof_model.train(X_train)
+
+    anomaly_types = ["token_spike", "infinite_loop", "high_latency", "tool_failure_cascade", "behavioral_drift"]
+
+    # Calibrate the production cutoff on a separate labeled calibration set.
+    # The final benchmark below remains untouched by this step.
+    calibration_histories = {key: list(value) for key, value in agent_histories.items()}
+    calibration_events = []
+    calibration_labels = []
+    for i in range(300):
+        calibration_events.append(generate_normal_event(["A001", "A002", "A003"][i % 3]))
+        calibration_labels.append(0)
+    for anomaly_type in anomaly_types:
+        for i in range(20):
+            calibration_events.append(inject_anomaly_event(anomaly_type, ["A001", "A002", "A003"][i % 3]))
+            calibration_labels.append(1)
+    calibration_features = []
+    for event in calibration_events:
+        agent_type = event["agent_type"]
+        calibration_features.append(extract_features(event, calibration_histories[agent_type]))
+        if event["status"] == "SUCCESS" and event["loop_count"] <= 3:
+            calibration_histories[agent_type].append(event)
+    if_precision, if_recall, if_f1 = if_model.calibrate(
+        np.array(calibration_features),
+        np.array(calibration_labels),
+    )
+    print(f"      Isolation Forest cutoff calibrated (P={if_precision}, R={if_recall}, F1={if_f1}).")
     print("      Model training complete.")
 
     # 2. Build test dataset (800 normal + 250 injected anomalies: 50 per type)
     print("[2/5] Constructing test dataset (800 normal + 250 injected anomalies across 5 types)...")
-    anomaly_types = ["token_spike", "infinite_loop", "high_latency", "tool_failure_cascade", "behavioral_drift"]
-    
     test_events = []
     ground_truth = []
     anomaly_categories = []
@@ -141,17 +166,29 @@ def run_evaluation():
 
         lof_score, lof_anom = lof_model.score(feats)
 
-        # Threshold rules
+        # Explainable rules use robust per-agent baselines for all benchmark
+        # anomaly families, including latency and multi-signal drift.
         hist_tok = [e['tokens_used'] for e in eval_histories[atype][-50:]] if eval_histories[atype] else [150]
+        hist_lat = [e['latency_ms'] for e in eval_histories[atype][-50:]] if eval_histories[atype] else [400.0]
         mean_tok = np.mean(hist_tok)
-        thresh_anom = (ev['tokens_used'] > 3.0 * mean_tok) or (ev['loop_count'] >= 10) or (ev['status'] != 'SUCCESS')
+        mean_lat = np.mean(hist_lat)
+        token_spike = ev['tokens_used'] > 3.0 * mean_tok
+        latency_spike = ev['latency_ms'] > 3.0 * mean_lat
+        drift = ev['tokens_used'] > 1.8 * mean_tok and ev['latency_ms'] > 1.8 * mean_lat
+        thresh_anom = token_spike or latency_spike or drift or (ev['loop_count'] >= 10) or (ev['status'] != 'SUCCESS')
 
         if_preds.append(if_anom)
         lof_preds.append(lof_anom)
         thresh_preds.append(thresh_anom)
 
         # Update history with normal baseline progression
-        if ev['status'] == 'SUCCESS' and ev['loop_count'] <= 3:
+        is_baseline_event = (
+            ev['status'] == 'SUCCESS'
+            and ev['loop_count'] <= 3
+            and ev['tokens_used'] <= 3.0 * mean_tok
+            and ev['latency_ms'] <= 3.0 * mean_lat
+        )
+        if is_baseline_event:
             eval_histories[atype].append(ev)
 
     avg_detection_latency_ms = round(float(np.mean(latencies_ms)), 3)

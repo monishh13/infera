@@ -78,7 +78,9 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
             'tokens_used': e.tokens_used,
             'latency_ms': e.latency_ms,
             'loop_count': e.loop_count,
-            'status': e.status
+            'status': e.status,
+            'prompt_length': e.prompt_length,
+            'response_length': e.response_length
         }
         for e in reversed(hist_events)
     ]
@@ -87,10 +89,12 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
         'tokens_used': req.tokens_used,
         'latency_ms': req.latency_ms,
         'loop_count': req.loop_count or 1,
-        'status': req.status
+        'status': req.status,
+        'prompt_length': req.prompt_length,
+        'response_length': req.response_length
     }
 
-    # 4. Extract 10D feature vector & score with IF model
+    # 4. Extract 13D feature vector & score with IF model
     feature_vector = extract_features(event_dict, hist_dicts)
     if_model = get_active_model(agent.id)
     if not if_model.fitted:

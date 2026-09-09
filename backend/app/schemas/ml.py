@@ -22,6 +22,8 @@ class MLPredictRequest(BaseModel):
     latency_ms: float
     loop_count: int = 1
     status: str = "SUCCESS"
+    prompt_length: Optional[int] = 0
+    response_length: Optional[int] = 0
 
 class MLPredictResponse(BaseModel):
     anomaly_score: float

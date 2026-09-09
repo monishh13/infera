@@ -39,9 +39,9 @@ async def get_model_stats(db: AsyncSession = Depends(get_db), current_user: User
         return MLModelStats(
             trained_on_count=200 if model.fitted else 0,
             contamination=0.05,
-            precision_score=0.92,
-            recall_score=0.88,
-            f1_score=0.90,
+            precision_score=0.0,
+            recall_score=0.0,
+            f1_score=0.0,
             trained_at=datetime.utcnow()
         )
 
@@ -60,7 +60,9 @@ async def predict_single_event(req: MLPredictRequest, db: AsyncSession = Depends
         'tokens_used': req.tokens_used,
         'latency_ms': req.latency_ms,
         'loop_count': req.loop_count,
-        'status': req.status
+        'status': req.status,
+        'prompt_length': req.prompt_length or 0,
+        'response_length': req.response_length or 0
     }
 
     feature_vector = extract_features(event_dict, [])

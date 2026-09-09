@@ -37,10 +37,24 @@ wheels/
 *.db
 infera.db
 
+# Logs and local runtime output
+*.log
+*.log.*
+backend/logs/
+backend/runtime/
+
 # Machine Learning Model Artifacts
 models/*.pkl
 models/*.joblib
 !models/.gitkeep
+backend/models/*.pkl
+backend/models/*.joblib
+
+# Generated ML evaluation reports
+backend/app/scripts/evaluation_results.csv
+backend/app/scripts/evaluation_results.json
+backend/app/scripts/paper_benchmark_supplement.json
+backend/scratch_eval.log
 
 # Node.js / React Frontend
 node_modules/

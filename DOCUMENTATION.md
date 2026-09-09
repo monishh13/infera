@@ -318,9 +318,9 @@ Frontend page: [`frontend/src/pages/SessionDetail.jsx`](frontend/src/pages/Sessi
 
 ---
 
-## 11. 10-Dimensional Spatial-Temporal Feature Engineering
+## 11. 13-Dimensional Spatial-Temporal Feature Engineering
 
-In [`backend/app/ml/feature_engineering.py`](backend/app/ml/feature_engineering.py), telemetry events are transformed into a feature vector $\mathbf{x} \in \mathbb{R}^{10}$:
+In [`backend/app/ml/feature_engineering.py`](backend/app/ml/feature_engineering.py), telemetry events are transformed into a feature vector $\mathbf{x} \in \mathbb{R}^{13}$:
 
 | Index | Feature | Mathematical Expression | Description |
 |---|---|---|---|
@@ -334,6 +334,9 @@ In [`backend/app/ml/feature_engineering.py`](backend/app/ml/feature_engineering.
 | $f_8$ | `rolling_fail_rate` | $\frac{1}{10}\sum_{k=i-9}^i f_{6,k}$ | Moving average failure rate over last 10 steps |
 | $f_9$ | `rolling_avg_tokens` | $\frac{1}{10}\sum_{k=i-9}^i T_k$ | Moving average token consumption over last 10 steps |
 | $f_{10}$ | `session_age_ratio` | $\min\left(1.0, \frac{\text{step\_count}}{100}\right)$ | Normalized session lifetime progression ratio |
+| $f_{11}$ | `cost_per_token` | $\frac{\text{cost}_i}{\max(T_i, 1.0)}$ | Cost anomalies independent of token volume |
+| $f_{12}$ | `prompt_response_ratio` | $\frac{\text{prompt\_length}_i}{\max(\text{response\_length}_i, 1.0)}$ | Ratio detecting degenerate or empty outputs |
+| $f_{13}$ | `rolling_latency_cv` | $\frac{\sigma_{L,\text{last10}}}{\mu_{L,\text{last10}} + 10^{-6}}$ | Coefficient of variation for rolling execution latency |
 
 History vectors are derived from the last **50** events fetched from the database.
 
@@ -344,16 +347,17 @@ History vectors are derived from the last **50** events fetched from the databas
 ### Primary Estimator: Isolation Forest (`IFModel`)
 Located in [`backend/app/ml/isolation_forest.py`](backend/app/ml/isolation_forest.py):
 - **Algorithm**: `sklearn.ensemble.IsolationForest`
-- **Config**: `n_estimators=100`, `contamination=0.05`, `random_state=42`, `n_jobs=-1`
+- **Scaler**: `sklearn.preprocessing.RobustScaler` (quantile/IQR based to resist extreme outliers)
+- **Config**: `n_estimators=200`, dynamic `contamination` (bounded to $[0.01, 0.15]$), `random_state=42`, `n_jobs=-1`
 - **Scoring & Classification**:
   - `score_samples(X)` yields decision values (lower = more anomalous).
   - Anomaly condition: `predict(X) == -1` OR `score < -0.5`.
-  - Heuristic cold-start fallback when historical events < 10:
+  - Heuristic cold-start fallback when historical events < 200:
     $$\text{is\_anomaly} = (T_i > 500) \lor (L_i > L_{\text{threshold}}) \lor (N_{\text{loop}} \ge N_{\text{threshold}})$$
 
 ### Secondary Estimator: Local Outlier Factor (`LOFModel`)
 Located in [`backend/app/ml/lof_baseline.py`](backend/app/ml/lof_baseline.py):
-- `LocalOutlierFactor(n_neighbors=20, contamination=0.05, novelty=True)` used for benchmark comparison via `GET /api/v1/ml/compare`.
+- `LocalOutlierFactor(n_neighbors=20, contamination=0.05, novelty=True)` using `RobustScaler` for benchmark comparison via `GET /api/v1/ml/compare`.
 
 ### Model Store
 Located in [`backend/app/ml/model_store.py`](backend/app/ml/model_store.py):
@@ -361,11 +365,14 @@ Located in [`backend/app/ml/model_store.py`](backend/app/ml/model_store.py):
 - Models are serialized to `backend/models/` using `joblib`.
 - `get_active_model(agent_id)` performs agent-specific → global fallback lookup.
 
-### Periodic Retraining Scheduler
+### Periodic Retraining Scheduler & Dynamic Evaluation Harness
 Located in [`backend/app/services/scheduler.py`](backend/app/services/scheduler.py):
 - Uses **APScheduler** (`AsyncIOScheduler`) to run `retrain_models_job()` every `MODEL_RETRAIN_INTERVAL_MINUTES` (default: 30).
-- Requires ≥ 200 events; fetches last 5000 events and builds the full feature matrix before retraining.
-- Persists `MLModelMetadata` records (precision: 0.92, recall: 0.88, F1: 0.90 — estimated on synthetic benchmark).
+- Requires ≥ 200 events; fetches up to 5000 events and extracts 13D feature matrix.
+- Computes actual contamination rate from historical failure proportion (clamped to $[0.01, 0.15]$).
+- Performs an 80/20 chronological train/eval split to evaluate true **Precision**, **Recall**, and **F1** scores using ground-truth failure pseudo-labels.
+- Automatically retrains specialized per-agent models for any agent with ≥ 200 historical events.
+- Persists `MLModelMetadata` records with dynamically calculated metrics to DB.
 
 ---
 

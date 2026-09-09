@@ -3,18 +3,19 @@ import joblib
 import numpy as np
 from typing import Tuple
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 LOF_CONFIG = {
     'n_neighbors': 20,
     'contamination': 0.05,
     'novelty': True,
-    'n_jobs': -1
+    'n_jobs': 1
 }
 
 class LOFModel:
     def __init__(self):
-        self.scaler = StandardScaler()
+        self.scaler = RobustScaler()
         self.model = LocalOutlierFactor(**LOF_CONFIG)
         self.fitted = False
 
@@ -24,6 +25,17 @@ class LOFModel:
         X = self.scaler.fit_transform(feature_matrix)
         self.model.fit(X)
         self.fitted = True
+
+    def evaluate(self, feature_matrix: np.ndarray, y_true: np.ndarray) -> Tuple[float, float, float]:
+        if not self.fitted or len(feature_matrix) == 0:
+            return 0.0, 0.0, 0.0
+        X = self.scaler.transform(feature_matrix)
+        preds = self.model.predict(X)
+        y_pred = np.where(preds == -1, 1, 0)
+        prec = float(precision_score(y_true, y_pred, zero_division=0))
+        rec = float(recall_score(y_true, y_pred, zero_division=0))
+        f1 = float(f1_score(y_true, y_pred, zero_division=0))
+        return round(prec, 4), round(rec, 4), round(f1, 4)
 
     def score(self, feature_vector: np.ndarray) -> Tuple[float, bool]:
         if not self.fitted:
