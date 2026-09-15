@@ -35,6 +35,9 @@ export default function ToolGraph({ sessionId }) {
           <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
             Session <span className="mono">{sessionId}</span> execution flow graph
           </p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+            Cross-agent edges indicate dependency impact, not causal inference.
+          </p>
         </div>
       </div>
 
@@ -77,6 +80,18 @@ export default function ToolGraph({ sessionId }) {
                         <Clock size={12} /> {Math.round(node.latency_ms)} ms
                       </span>
                       <span>Tokens: <strong>{node.tokens_used}</strong></span>
+                      {node.agent_id && <span>Agent: <strong className="mono">{node.agent_id}</strong></span>}
+                      {node.parent_agent_id && (
+                        <span style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>
+                          Depends on: <strong className="mono">{node.parent_agent_id}</strong>
+                        </span>
+                      )}
+                      {node.impact_status && (
+                        <span style={{ color: 'var(--accent-amber)', fontWeight: 600 }}>
+                          Dependency impact: {node.impact_status}
+                        </span>
+                      )}
+                      {node.interaction_type && <span>Interaction: <strong>{node.interaction_type}</strong></span>}
                       {node.loop_count > 1 && (
                         <span style={{ color: 'var(--accent-amber)', fontWeight: 600 }}>Loop count: {node.loop_count}</span>
                       )}
@@ -94,6 +109,19 @@ export default function ToolGraph({ sessionId }) {
               );
             })}
           </div>
+          {Array.isArray(graphData.edges) && graphData.edges.some(edge => edge.relationship === 'cross_agent') && (
+            <div style={{ marginTop: '16px', padding: '10px 12px', borderRadius: '8px', background: 'var(--accent-blue-soft)', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+              <strong>Agent dependencies:</strong>{' '}
+              {graphData.edges
+                .filter(edge => edge.relationship === 'cross_agent')
+                .map(edge => {
+                  const source = graphData.nodes.find(node => node.id === edge.source);
+                  const target = graphData.nodes.find(node => node.id === edge.target);
+                  return `${source?.agent_id || edge.source} -> ${target?.agent_id || edge.target}${edge.label ? ` (${edge.label})` : ''}`;
+                })
+                .join(', ')}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -207,7 +207,7 @@ export default function AgentDetail() {
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <SectionHeader
             title="Health & Risk Breakdown"
-            description="Predictive model output and health degradation factors"
+            description="Heuristic operational health index and degradation factors"
           />
 
           <div

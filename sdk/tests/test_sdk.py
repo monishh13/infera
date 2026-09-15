@@ -43,6 +43,20 @@ class TestInferaSDK(unittest.TestCase):
         self.assertEqual(data["source"], "sdk")
         self.assertTrue("external_event_id" in data)
 
+    def test_multi_agent_context_is_preserved(self):
+        span = TelemetrySpan(
+            agent_id="A002",
+            session_id="S100",
+            parent_agent_id="A001",
+            parent_event_id=123,
+            interaction_type="delegation",
+        )
+        data = span.to_ingest_dict()
+        self.assertEqual(data["session_id"], "S100")
+        self.assertEqual(data["parent_agent_id"], "A001")
+        self.assertEqual(data["parent_event_id"], 123)
+        self.assertEqual(data["interaction_type"], "delegation")
+
     @patch("requests.post")
     def test_end_to_end_tracing(self, mock_post):
         mock_post.return_value.status_code = 200

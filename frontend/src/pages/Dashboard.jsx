@@ -89,7 +89,7 @@ export default function Dashboard() {
               value={overview.avg_reliability_score}
               decimals={1}
               suffix="/100"
-              subtitle="Predictive Index"
+              subtitle="Heuristic Index"
               trend={overview.avg_reliability_score >= 85 ? 'Healthy Fleet' : 'Degraded Performance'}
               trendColor={overview.avg_reliability_score >= 85 ? 'var(--accent-green)' : 'var(--accent-amber)'}
               index={2}

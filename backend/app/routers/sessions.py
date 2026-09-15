@@ -78,6 +78,7 @@ async def get_session_tool_graph(id: str, db: AsyncSession = Depends(get_db), cu
             "is_anomaly": e.is_anomaly,
             "agent_id": e.agent_id,
             "parent_agent_id": e.parent_agent_id,
+            "interaction_type": e.interaction_type,
             "impact_status": e.impact_status,
         })
         if idx > 0:

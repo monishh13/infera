@@ -68,6 +68,17 @@ with agent.session() as session:
         span.set_tokens(tokens=120)
         span.add_metadata("query", "reset password")
 
+# Preserve cross-agent dependency context when one agent invokes another.
+with infera.agent(id="A002", name="Research Agent").session(session_id=session.session_id) as child_session:
+    with child_session.trace(
+        name="research_subtask",
+        step_type="reasoning",
+        parent_agent_id="A001",
+        parent_event_id=123,
+        interaction_type="delegation",
+    ):
+        pass
+
 infera.flush()
 ```
 
@@ -80,6 +91,8 @@ infera.flush()
 * **Automatic Error Capture**: Unhandled exceptions within a trace block set status to `FAILURE`, record the error message, and safely re-raise the exception to your application logic.
 * **Metadata Redaction**: Automatically redacts sensitive keys (e.g. `api_key`, `authorization`, `password`).
 * **Resilient Error Boundary**: Telemetry transmission failures will never crash your primary AI agent application.
+* **Multi-agent context**: `parent_agent_id`, `parent_event_id`, and `interaction_type` preserve dependency relationships while retaining the same `session_id`.
+* **Heuristic ARS semantics**: The dashboard's ARS is an operational 0–100 index; it is not a calibrated failure probability.
 
 ---
 

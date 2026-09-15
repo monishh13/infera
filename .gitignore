@@ -87,3 +87,6 @@ sctr-2026-conference-template-a4.docx
 SCTR-2026-MANUSCRIPT-NOTE.md
 sctr-2026-infera-manuscript.docx
 sctr-2026-infera-architecture.png
+
+# Paper experiment artifacts (generated locally and intentionally ignored)
+paper_experiments/
