@@ -24,10 +24,10 @@ def mock_text_summarizer(text: str = "Summary") -> Dict[str, Any]:
 
 
 class RealLLMAgent(BaseAgent):
-    """Agent A004 - Real LLM-backed agent calling Groq API (llama-3.1-8b-instant).
+    """Agent A004 - Real LLM-backed agent using Google AI Studio or Groq.
     
     Executes a real multi-step tool call task and emits genuine telemetry:
-    - Real token consumption directly from Groq's usage API response
+    - Real token consumption directly from the provider's usage API response
     - Real network + inference latency measured in milliseconds
     - Genuine SUCCESS/FAILURE status based on actual API response
     - Tool execution step tracking (weather_lookup -> currency_converter -> text_summarizer)
@@ -92,12 +92,32 @@ class RealLLMAgent(BaseAgent):
         elif tool_name == 'text_summarizer':
             mock_text_summarizer('Summary')
 
+        provider = (settings.LLM_PROVIDER or os.getenv("LLM_PROVIDER", "google")).strip().lower()
+        google_api_key = (
+            settings.GOOGLE_API_KEY
+            or settings.GEMINI_API_KEY
+            or os.getenv("GOOGLE_API_KEY", "")
+            or os.getenv("GEMINI_API_KEY", "")
+        ).strip().strip("'").strip('"')
         groq_api_key = (settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")).strip().strip("'").strip('"')
-        model_name = (settings.GROQ_MODEL or "llama-3.1-8b-instant").strip().strip("'").strip('"')
 
-        if not groq_api_key:
-            # Graceful fallback when GROQ_API_KEY is not configured
-            logger.warning("Agent A004: GROQ_API_KEY not set. Emitting real FAILURE telemetry event.")
+        # Keep existing Groq configurations working while Google is the default.
+        if provider in {"google", "gemini"} and not google_api_key and groq_api_key:
+            logger.warning("Agent A004: Google API key is missing; using configured Groq credentials.")
+            provider = "groq"
+        if provider == "auto":
+            provider = "google" if google_api_key else "groq"
+        if provider not in {"google", "gemini", "groq"}:
+            raise ValueError("LLM_PROVIDER must be one of: google, gemini, groq, auto")
+
+        api_key = google_api_key if provider in {"google", "gemini"} else groq_api_key
+        if not api_key:
+            missing_key = (
+                "GOOGLE_API_KEY (or GEMINI_API_KEY)"
+                if provider in {"google", "gemini"}
+                else "GROQ_API_KEY"
+            )
+            logger.warning("Agent A004: %s not set. Emitting real FAILURE telemetry event.", missing_key)
             self._step_index += 1
             return {
                 'tokens_used': 0,
@@ -107,12 +127,39 @@ class RealLLMAgent(BaseAgent):
                 'tool_name': tool_name,
                 'prompt_length': len(prompt),
                 'response_length': 0,
-                'error_message': 'GROQ_API_KEY not configured or invalid API key',
-                'response_text': 'Fallback active: GROQ_API_KEY is missing. Configure GROQ_API_KEY in .env to call live LLM.'
+                'error_message': f'{missing_key} not configured or invalid API key',
+                'response_text': f'Fallback active: {missing_key} is missing. Configure it in .env to call live LLM.'
             }
 
-        # Call real Groq API endpoint (OpenAI compatible format)
-        url = "https://api.groq.com/openai/v1/chat/completions"
+        # Build the request using the selected provider's API format.
+        max_tokens = 1024 if (self.adversarial_mode or custom_prompt) else 256
+        if provider in {"google", "gemini"}:
+            model_name = (settings.GOOGLE_MODEL or "gemini-3.7-flash").strip().strip("'").strip('"')
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "systemInstruction": {
+                    "parts": [{"text": "You are a concise, helpful multi-step AI agent."}]
+                },
+                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.7},
+            }
+            request_params = {"params": {"key": api_key}}
+        else:
+            model_name = (settings.GROQ_MODEL or "llama-3.1-8b-instant").strip().strip("'").strip('"')
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": "You are a concise, helpful multi-step AI agent."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": max_tokens,
+                "temperature": 0.7
+            }
+            request_params = {}
+        '''
         headers = {
             "Authorization": f"Bearer {groq_api_key}",
             "Content-Type": "application/json"
@@ -126,20 +173,31 @@ class RealLLMAgent(BaseAgent):
             "max_tokens": 1024 if (self.adversarial_mode or custom_prompt) else 256,
             "temperature": 0.7
         }
+        '''
 
         start_time = time.perf_counter()
         try:
             with httpx.Client(timeout=15.0) as client:
-                response = client.post(url, headers=headers, json=payload)
+                response = client.post(url, headers=headers, json=payload, **request_params)
                 elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 1)
 
                 if response.status_code == 200:
                     data = response.json()
-                    usage = data.get("usage", {})
-                    tokens_used = usage.get("total_tokens", usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0))
+                    if provider in {"google", "gemini"}:
+                        usage = data.get("usageMetadata", {})
+                        tokens_used = usage.get(
+                            "totalTokenCount",
+                            usage.get("promptTokenCount", 0) + usage.get("candidatesTokenCount", 0),
+                        )
+                        candidates = data.get("candidates", [])
+                        parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+                        resp_content = "".join(part.get("text", "") for part in parts)
+                    else:
+                        usage = data.get("usage", {})
+                        tokens_used = usage.get("total_tokens", usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0))
                     
-                    choices = data.get("choices", [])
-                    resp_content = choices[0].get("message", {}).get("content", "") if choices else ""
+                        choices = data.get("choices", [])
+                        resp_content = choices[0].get("message", {}).get("content", "") if choices else ""
 
                     self._step_index += 1
                     return {
@@ -154,7 +212,8 @@ class RealLLMAgent(BaseAgent):
                         'response_text': resp_content
                     }
                 else:
-                    err_msg = f"Groq API returned HTTP {response.status_code}: {response.text[:150]}"
+                    provider_name = "Google AI Studio" if provider in {"google", "gemini"} else "Groq"
+                    err_msg = f"{provider_name} API returned HTTP {response.status_code}: {response.text[:150]}"
                     logger.error(f"Agent A004 API call failed: {err_msg}")
                     self._step_index += 1
                     return {
@@ -171,7 +230,8 @@ class RealLLMAgent(BaseAgent):
 
         except Exception as err:
             elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 1)
-            err_msg = f"Groq API call failed: {str(err)}"
+            provider_name = "Google AI Studio" if provider in {"google", "gemini"} else "Groq"
+            err_msg = f"{provider_name} API call failed: {str(err)}"
             logger.error(f"Agent A004 exception: {err_msg}")
             self._step_index += 1
             return {

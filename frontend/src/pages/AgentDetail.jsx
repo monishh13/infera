@@ -192,10 +192,10 @@ export default function AgentDetail() {
           index={2}
         />
         <MetricCard
-          title="Failure Probability"
-          value={Math.round((health?.failure_probability ?? reliability?.predicted_failure_prob ?? 0.0) * 100)}
+          title="Operational Risk Index"
+          value={Math.round((health?.risk_index ?? reliability?.risk_index ?? reliability?.predicted_failure_prob ?? 0.0) * 100)}
           suffix="%"
-          subtitle="Next 10 Calls"
+          subtitle="Heuristic index"
           trend={reliability?.risk_level ? `${reliability.risk_level} Risk` : 'Low Risk'}
           trendColor={reliability?.risk_level === 'CRITICAL' ? 'var(--accent-red)' : 'var(--accent-green)'}
           index={3}
@@ -239,10 +239,10 @@ export default function AgentDetail() {
               color="var(--accent-amber)"
             />
             <HealthMetricCard
-              label="Predicted Failure Prob"
-              value={`${Math.round(health.failure_probability * 100)}%`}
+              label="Operational Risk Index"
+              value={`${Math.round((health.risk_index ?? 0) * 100)}%`}
               icon={AlertTriangle}
-              color={health.failure_probability > 0.15 ? 'var(--accent-red)' : 'var(--accent-green)'}
+              color={health.risk_index > 0.15 ? 'var(--accent-red)' : 'var(--accent-green)'}
             />
           </div>
 

@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.1-8b-instant"
+    GOOGLE_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    GOOGLE_MODEL: str = "gemini-2.5-flash"
+    LLM_PROVIDER: str = "auto"
     
     API_V1_STR: str = "/api/v1"
     
@@ -38,4 +42,3 @@ class Settings(BaseSettings):
         extra = "ignore"
 
 settings = Settings()
-

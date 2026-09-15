@@ -251,11 +251,11 @@ async def get_agent_health(agent_id: str, db: AsyncSession = Depends(get_db), cu
     if latest_rel:
         score = latest_rel.score
         risk = latest_rel.risk_level
-        failure_prob = latest_rel.predicted_failure_prob
+        risk_index = latest_rel.predicted_failure_prob
     else:
         score = 100.0
         risk = "LOW"
-        failure_prob = 0.02
+        risk_index = 0.02
 
     # Determine overall trend from reliability history
     if len(rel_history) >= 3:
@@ -313,7 +313,7 @@ async def get_agent_health(agent_id: str, db: AsyncSession = Depends(get_db), cu
         "avg_latency": round(avg_latency, 1),
         "avg_tokens": round(avg_tokens, 1),
         "token_efficiency": round(latest_rel.token_efficiency, 4) if latest_rel else 1.0,
-        "failure_probability": round(failure_prob, 4),
+        "risk_index": round(risk_index, 4),
         "loop_frequency": round(avg_loop, 2),
         "failure_count": failure_count,
         "top_reasons": top_reasons,

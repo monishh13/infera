@@ -6,7 +6,6 @@ export default function ReliabilityGauge({ reliability }) {
 
   const score = Math.round(reliability.score || 100);
   const risk = reliability.risk_level || 'LOW';
-  const failureProb = Math.round((reliability.predicted_failure_prob || 0.02) * 100);
 
   // SVG Gauge calculations
   const radius = 80;
@@ -35,7 +34,7 @@ export default function ReliabilityGauge({ reliability }) {
         Agent Reliability Index (ARS)
       </h3>
       <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-4)' }}>
-        Composite health index predicting failure risk
+        Heuristic operational health and reliability index
       </p>
 
       {/* Semicircle SVG Gauge */}
@@ -76,14 +75,14 @@ export default function ReliabilityGauge({ reliability }) {
         </div>
       </div>
 
-      {/* Risk Badge & Failure Prob */}
+      {/* Risk Badge & Operational Risk Index */}
       <div style={{ marginBottom: 'var(--space-4)' }}>
         <span className={`badge badge-${risk.toLowerCase()}`} style={{ fontSize: '11px', padding: '3px 10px' }}>
           {risk === 'LOW' ? <ShieldCheck size={13} /> : <ShieldAlert size={13} />}
           {risk} RISK LEVEL
         </span>
         <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginTop: '8px' }}>
-          Failure Probability (next 10 calls): <strong style={{ color: scoreColor }}>{failureProb}%</strong>
+          Operational risk index: <strong style={{ color: scoreColor }}>{Math.round((reliability.risk_index ?? reliability.predicted_failure_prob ?? 0.02) * 100)}%</strong>
         </p>
       </div>
 

@@ -151,7 +151,8 @@ def run_evaluation():
     if_preds = []
     lof_preds = []
     thresh_preds = []
-    latencies_ms = []
+    if_latencies_ms = []
+    lof_latencies_ms = []
 
     eval_histories = {"A001": list(agent_histories["A001"]), "A002": list(agent_histories["A002"]), "A003": list(agent_histories["A003"])}
 
@@ -162,9 +163,12 @@ def run_evaluation():
         t0 = time.perf_counter()
         if_score, if_anom = if_model.score(feats)
         t1 = time.perf_counter()
-        latencies_ms.append((t1 - t0) * 1000.0)
+        if_latencies_ms.append((t1 - t0) * 1000.0)
 
+        t2 = time.perf_counter()
         lof_score, lof_anom = lof_model.score(feats)
+        t3 = time.perf_counter()
+        lof_latencies_ms.append((t3 - t2) * 1000.0)
 
         # Explainable rules use robust per-agent baselines for all benchmark
         # anomaly families, including latency and multi-signal drift.
@@ -191,7 +195,8 @@ def run_evaluation():
         if is_baseline_event:
             eval_histories[atype].append(ev)
 
-    avg_detection_latency_ms = round(float(np.mean(latencies_ms)), 3)
+    avg_if_latency_ms = round(float(np.mean(if_latencies_ms)), 3)
+    avg_lof_latency_ms = round(float(np.mean(lof_latencies_ms)), 3)
 
     # 4. Idle / Normal FPR evaluation (1000 normal events over 2h simulation)
     print("[4/5] Running 2-hour idle simulation (1000 normal events) for FPR check...")
@@ -229,12 +234,19 @@ def run_evaluation():
         "LOF Baseline": calculate_metrics(ground_truth, lof_preds),
         "Threshold Rules": calculate_metrics(ground_truth, thresh_preds)
     }
+    overall_results["Isolation Forest"]["avg_latency_ms"] = avg_if_latency_ms
+    overall_results["LOF Baseline"]["avg_latency_ms"] = avg_lof_latency_ms
 
     report = {
         "timestamp": datetime.now().isoformat(),
         "total_events_evaluated": len(test_events),
         "injected_anomalies_count": 250,
-        "avg_detection_latency_ms": avg_detection_latency_ms,
+        "dataset_sizes": [len(test_events)],
+        "avg_detection_latency_ms": avg_if_latency_ms,
+        "latency_measurement": {
+            "Isolation Forest": {"avg_ms": avg_if_latency_ms, "samples": len(if_latencies_ms)},
+            "LOF Baseline": {"avg_ms": avg_lof_latency_ms, "samples": len(lof_latencies_ms)}
+        },
         "idle_false_positive_rate": idle_fpr,
         "overall": overall_results,
         "per_type": type_results
@@ -249,10 +261,10 @@ def run_evaluation():
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["Model", "Anomaly Type", "Precision", "Recall", "F1 Score", "FPR"])
+        writer.writerow(["Model", "Anomaly Type", "Precision", "Recall", "F1 Score", "FPR", "Avg Latency (ms)"])
         for model_name in ["Isolation Forest", "LOF Baseline", "Threshold Rules"]:
             m = overall_results[model_name]
-            writer.writerow([model_name, "OVERALL", m["precision"], m["recall"], m["f1"], m["fpr"]])
+            writer.writerow([model_name, "OVERALL", m["precision"], m["recall"], m["f1"], m["fpr"], m.get("avg_latency_ms", "")])
             for atype in anomaly_types:
                 tm = type_results[atype][model_name]
                 writer.writerow([model_name, atype, tm["precision"], tm["recall"], tm["f1"], tm["fpr"]])
@@ -260,12 +272,12 @@ def run_evaluation():
     print("\n" + "=" * 80)
     print("EVALUATION RESULTS SUMMARY TABLE (FOR RESEARCH PAPER SECTION 7)")
     print("=" * 80)
-    print(f"Average Scoring Latency: {avg_detection_latency_ms} ms | Normal Operation FPR: {idle_fpr * 100:.2f}%\n")
-    print(f"{'Model':<20} | {'Anomaly Type':<22} | {'Precision':<10} | {'Recall':<10} | {'F1 Score':<10}")
+    print(f"IF latency: {avg_if_latency_ms} ms | LOF latency: {avg_lof_latency_ms} ms | Normal IF FPR: {idle_fpr * 100:.2f}%\n")
+    print(f"{'Model':<20} | {'Anomaly Type':<22} | {'Precision':<10} | {'Recall':<10} | {'F1 Score':<10} | {'FPR':<10} | {'Latency ms':<10}")
     print("-" * 80)
     for model_name in ["Isolation Forest", "LOF Baseline", "Threshold Rules"]:
         m = overall_results[model_name]
-        print(f"{model_name:<20} | {'OVERALL':<22} | {m['precision']:<10.4f} | {m['recall']:<10.4f} | {m['f1']:<10.4f}")
+        print(f"{model_name:<20} | {'OVERALL':<22} | {m['precision']:<10.4f} | {m['recall']:<10.4f} | {m['f1']:<10.4f} | {m['fpr']:<10.4f} | {m.get('avg_latency_ms', 0):<10.3f}")
         for atype in anomaly_types:
             tm = type_results[atype][model_name]
             print(f"{'':<20} | {atype:<22} | {tm['precision']:<10.4f} | {tm['recall']:<10.4f} | {tm['f1']:<10.4f}")

@@ -75,13 +75,23 @@ async def get_session_tool_graph(id: str, db: AsyncSession = Depends(get_db), cu
             "tokens_used": e.tokens_used,
             "loop_count": e.loop_count,
             "step": idx + 1,
-            "is_anomaly": e.is_anomaly
+            "is_anomaly": e.is_anomaly,
+            "agent_id": e.agent_id,
+            "parent_agent_id": e.parent_agent_id,
+            "impact_status": e.impact_status,
         })
         if idx > 0:
             edges.append({
                 "source": f"node_{events[idx-1].id}",
                 "target": node_id,
                 "label": f"Step {idx}"
+            })
+        if e.parent_event_id:
+            edges.append({
+                "source": f"node_{e.parent_event_id}",
+                "target": node_id,
+                "label": "agent dependency",
+                "relationship": "cross_agent",
             })
 
     return {

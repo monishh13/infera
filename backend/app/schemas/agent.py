@@ -44,7 +44,8 @@ class AgentReliabilityRead(BaseModel):
     latency_score: float
     loop_frequency_score: float
     risk_level: str
-    predicted_failure_prob: float
+    risk_index: float
+    predicted_failure_prob: Optional[float] = None
     calculated_at: Optional[datetime] = None
 
     class Config:

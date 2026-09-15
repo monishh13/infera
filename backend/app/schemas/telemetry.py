@@ -17,6 +17,9 @@ class TelemetryIngestRequest(BaseModel):
     raw_payload: Optional[Dict[str, Any]] = None
     source: Optional[str] = "simulator"  # simulator | sdk
     external_event_id: Optional[str] = None
+    parent_agent_id: Optional[str] = None
+    parent_event_id: Optional[int] = None
+    interaction_type: Optional[str] = None
 
 class TelemetryIngestResponse(BaseModel):
     event_id: int
@@ -46,6 +49,10 @@ class TelemetryRead(BaseModel):
     is_anomaly: bool
     source: Optional[str] = "simulator"
     external_event_id: Optional[str] = None
+    parent_agent_id: Optional[str] = None
+    parent_event_id: Optional[int] = None
+    interaction_type: Optional[str] = None
+    impact_status: Optional[str] = None
     created_at: datetime
 
     class Config:

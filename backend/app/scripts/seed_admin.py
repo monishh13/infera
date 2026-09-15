@@ -84,9 +84,9 @@ async def seed():
             },
             {
                 "id": "A004",
-                "name": "Real LLM Agent (Groq)",
+                "name": "Real LLM Agent (Google Flash / Groq)",
                 "type": "real_llm",
-                "description": "Real LLM-backed agent using Groq free API (llama-3.1-8b-instant) for multi-step tool execution.",
+                "description": "Real LLM-backed agent using Google AI Studio Gemini Flash or Groq for multi-step tool execution.",
                 "token_budget": 5000,
                 "latency_threshold_ms": 3000.0,
                 "failure_threshold": 0.25,

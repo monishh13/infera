@@ -18,6 +18,7 @@ from app.simulator.anomaly_injector import get_anomaly_injector
 
 from app.models.user import User
 from app.services.auth_service import get_current_user
+from app.ml.multi_agent import evaluate_interactions, generate_scenario
 
 logger = logging.getLogger("infera.simulator")
 router = APIRouter(prefix="/simulator", tags=["Simulator"])
@@ -27,6 +28,22 @@ _simulator_state = {
     "agents": {},
     "tasks": []
 }
+
+@router.get("/scenario/{scenario}")
+async def get_reproducible_scenario(
+    scenario: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Run a deterministic multi-agent scenario and return evaluated impact."""
+    try:
+        events = generate_scenario(scenario)
+    except ValueError as err:
+        raise HTTPException(status_code=422, detail=str(err)) from err
+    return {
+        "scenario": scenario,
+        "events": [event.__dict__ for event in events],
+        "evaluation": evaluate_interactions(events),
+    }
 
 def _init_simulators():
     if not _simulator_state["agents"]:
@@ -61,7 +78,7 @@ async def _ensure_simulator_agents_exist(db: AsyncSession):
         {"id": "A001", "name": "Customer Support Agent", "type": "customer_support", "token_budget": 2000},
         {"id": "A002", "name": "Deep Research Agent", "type": "research", "token_budget": 8000},
         {"id": "A003", "name": "Sales Representative Agent", "type": "sales", "token_budget": 4000},
-        {"id": "A004", "name": "Real LLM Agent (Groq)", "type": "real_llm", "token_budget": 5000},
+        {"id": "A004", "name": "Real LLM Agent (Google Flash / Groq)", "type": "real_llm", "token_budget": 5000},
     ]
     for data in sim_data:
         stmt = select(Agent).where(Agent.id == data["id"])
@@ -130,6 +147,27 @@ async def inject_anomaly(req: SimulatorInjectRequest, current_user: User = Depen
     if not agent_obj:
         raise HTTPException(status_code=404, detail=f"Agent {req.agent_id} not found in simulator")
 
+    duration = req.duration_events if req.duration_events is not None else 3
+    if duration < 1:
+        raise HTTPException(status_code=422, detail="duration_events must be at least 1")
+
+    try:
+        injector = get_anomaly_injector(req.anomaly_type, duration=duration)
+    except ValueError as err:
+        raise HTTPException(status_code=422, detail=str(err)) from err
+
+    agent_obj.inject_anomaly(injector)
+    return {
+        "message": (
+            f"Injected {req.anomaly_type} anomaly into {req.agent_id} "
+            f"for the next {duration} telemetry events"
+        ),
+        "agent_id": req.agent_id,
+        "anomaly_type": req.anomaly_type,
+        "duration_events": duration,
+        "simulator_running": _simulator_state["running"],
+    }
+
 from pydantic import BaseModel
 
 class RealLLMExecuteRequest(BaseModel):
@@ -185,4 +223,3 @@ async def execute_real_llm_step(
         "alert_generated": telemetry_res.alert_generated,
         "alert_id": telemetry_res.alert_id
     }
-

@@ -20,7 +20,7 @@ Infera solves these challenges by combining:
 - **Unsupervised Anomaly Detection Architecture**: Employs online **Isolation Forest** (`IFModel`) and **Local Outlier Factor** (`LOFModel`) algorithms trained in-process without labeled failure datasets.
 - **Explainable Anomaly Detection Engine**: Generates root-cause diagnostic explanations comparing anomalous spans against historical agent baselines.
 - **Context-Aware Action Recommendations Engine**: Provides priority-ranked remediation guidance (`critical`, `high`, `medium`, `low`) for operational alerts.
-- **Agent Reliability Score (ARS)**: Quantitative composite metric ($0\text{--}100$) evaluating agent stability and estimating failure probabilities $P(\text{failure})$.
+- **Agent Reliability Score (ARS)**: A deterministic heuristic operational health/reliability index ($0\text{--}100$) for evaluating agent stability; it is not a calibrated failure probability.
 - **Session Replay & Step Trace Analysis**: Interactive step-by-step trace playback displaying per-step latencies, token consumption, and USD cost breakdown.
 - **Real LLM Agent (A004)**: Live Groq API-backed agent (`llama-3.1-8b-instant`) emitting genuine telemetry from real multi-step LLM calls, with an interactive **Real Agent Playground** in the dashboard.
 - **Obsidian Dark Real-Time Analytics Command Center**: React 18 / Vite dashboard providing real-time visual telemetry, Directed Acyclic Graph (DAG) state representations of tool interactions, side-by-side agent comparison matrices, and metric trend analysis.

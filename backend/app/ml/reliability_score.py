@@ -10,8 +10,8 @@ def score_to_risk(score: float) -> str:
     else:
         return 'CRITICAL'
 
-def score_to_failure_prob(score: float) -> float:
-    # Estimate failure probability based on score
+def score_to_risk_index(score: float) -> float:
+    """Return a heuristic operational risk index, not a calibrated probability."""
     if score >= 85:
         return round(max(0.01, (100.0 - score) / 300.0), 4)
     elif score >= 65:
@@ -20,6 +20,11 @@ def score_to_failure_prob(score: float) -> float:
         return round(0.20 + (65.0 - score) * 0.012, 4)
     else:
         return round(min(0.95, 0.50 + (40.0 - score) * 0.01125), 4)
+
+
+def score_to_failure_prob(score: float) -> float:
+    """Deprecated compatibility wrapper; returns the heuristic risk index."""
+    return score_to_risk_index(score)
 
 def compute_reliability_score(session_stats: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -53,7 +58,7 @@ def compute_reliability_score(session_stats: Dict[str, Any]) -> Dict[str, Any]:
     score = round(max(0.0, min(100.0, score)), 2)
     
     risk_level = score_to_risk(score)
-    pred_fail = score_to_failure_prob(score)
+    risk_index = score_to_risk_index(score)
     
     return {
         'score': score,
@@ -62,5 +67,8 @@ def compute_reliability_score(session_stats: Dict[str, Any]) -> Dict[str, Any]:
         'latency_score': round(lat_score, 4),
         'loop_frequency_score': round(loop_score, 4),
         'risk_level': risk_level,
-        'predicted_failure_prob': pred_fail
+        'risk_index': risk_index,
+        # Deprecated compatibility alias. This is retained for old clients only;
+        # it is not a probability and must not be interpreted as one.
+        'predicted_failure_prob': risk_index
     }

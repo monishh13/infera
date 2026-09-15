@@ -22,4 +22,8 @@ class TelemetryEvent(Base):
     is_anomaly = Column(Boolean, default=False, index=True)
     source = Column(String(20), default="simulator", nullable=True)  # simulator | sdk
     external_event_id = Column(String(100), nullable=True, index=True)
+    parent_agent_id = Column(String(50), nullable=True, index=True)
+    parent_event_id = Column(BigInteger().with_variant(Integer, "sqlite"), nullable=True, index=True)
+    interaction_type = Column(String(30), nullable=True)  # request | response | dependency
+    impact_status = Column(String(30), nullable=True)  # observed | dependency_impact
     created_at = Column(DateTime, default=datetime.utcnow)

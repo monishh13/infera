@@ -1,17 +1,17 @@
-Model,Anomaly Type,Precision,Recall,F1 Score,FPR
-Isolation Forest,OVERALL,0.928,0.98,0.9533,0.0238
+Model,Anomaly Type,Precision,Recall,F1 Score,FPR,Avg Latency (ms)
+Isolation Forest,OVERALL,0.928,0.98,0.9533,0.0238,36.946
 Isolation Forest,token_spike,0.7246,1.0,0.8403,0.0238
 Isolation Forest,infinite_loop,0.7246,1.0,0.8403,0.0238
 Isolation Forest,high_latency,0.7246,1.0,0.8403,0.0238
 Isolation Forest,tool_failure_cascade,0.7031,0.9,0.7895,0.0238
 Isolation Forest,behavioral_drift,0.7246,1.0,0.8403,0.0238
-LOF Baseline,OVERALL,0.9462,0.984,0.9647,0.0175
+LOF Baseline,OVERALL,0.9462,0.984,0.9647,0.0175,3.483
 LOF Baseline,token_spike,0.7812,1.0,0.8772,0.0175
 LOF Baseline,infinite_loop,0.7812,1.0,0.8772,0.0175
 LOF Baseline,high_latency,0.7812,1.0,0.8772,0.0175
 LOF Baseline,tool_failure_cascade,0.7667,0.92,0.8364,0.0175
 LOF Baseline,behavioral_drift,0.7812,1.0,0.8772,0.0175
-Threshold Rules,OVERALL,0.7806,0.968,0.8643,0.085
+Threshold Rules,OVERALL,0.7806,0.968,0.8643,0.085,
 Threshold Rules,token_spike,0.4237,1.0,0.5952,0.085
 Threshold Rules,infinite_loop,0.4237,1.0,0.5952,0.085
 Threshold Rules,high_latency,0.4237,1.0,0.5952,0.085

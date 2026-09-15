@@ -1,17 +1,23 @@
 import os
 import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 
 logger = logging.getLogger("infera.database")
 
 def get_engine(db_url: str):
+    engine_options = {
+        "echo": False,
+        "future": True,
+        "pool_pre_ping": True,
+    }
+    if os.getenv("INFERA_TESTING") == "True":
+        engine_options["poolclass"] = NullPool
     return create_async_engine(
         db_url,
-        echo=False,
-        future=True,
-        pool_pre_ping=True,
+        **engine_options,
     )
 
 def _init_db():

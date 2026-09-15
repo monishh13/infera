@@ -99,6 +99,7 @@ async def get_latest_reliability(id: str, db: AsyncSession = Depends(get_db), cu
             "latency_score": 1.0,
             "loop_frequency_score": 1.0,
             "risk_level": "LOW",
+            "risk_index": 0.02,
             "predicted_failure_prob": 0.02
         }
     return {
@@ -109,6 +110,7 @@ async def get_latest_reliability(id: str, db: AsyncSession = Depends(get_db), cu
         "latency_score": score_obj.latency_score,
         "loop_frequency_score": score_obj.loop_frequency_score,
         "risk_level": score_obj.risk_level,
+        "risk_index": score_obj.predicted_failure_prob,
         "predicted_failure_prob": score_obj.predicted_failure_prob,
         "calculated_at": score_obj.calculated_at
     }

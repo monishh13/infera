@@ -107,6 +107,14 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
         is_anomaly = (req.tokens_used > 500 or req.latency_ms > agent.latency_threshold_ms or (req.loop_count or 1) >= agent.loop_threshold)
         anomaly_score = -0.75 if is_anomaly else 0.10
 
+    parent_event = None
+    if req.parent_event_id:
+        parent_event = (
+            await db.execute(
+                select(TelemetryEvent).where(TelemetryEvent.id == req.parent_event_id)
+            )
+        ).scalars().first()
+
     # 5. Create TelemetryEvent
     ts = req.timestamp or datetime.utcnow()
     if ts.tzinfo is not None:
@@ -127,7 +135,17 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
         anomaly_score=anomaly_score,
         is_anomaly=is_anomaly,
         source=source_val,
-        external_event_id=req.external_event_id
+        external_event_id=req.external_event_id,
+        parent_agent_id=req.parent_agent_id,
+        parent_event_id=req.parent_event_id,
+        interaction_type=req.interaction_type,
+        # Dependency impact is a separate observation from this event's own
+        # anomaly label; it intentionally does not promote is_anomaly.
+        impact_status=(
+            "dependency_impact"
+            if parent_event and parent_event.is_anomaly and not is_anomaly
+            else ("observed" if is_anomaly else None)
+        ),
     )
     db.add(event)
     await db.flush()
@@ -178,7 +196,7 @@ async def process_single_telemetry(req: TelemetryIngestRequest, db: AsyncSession
         latency_score=rel_res['latency_score'],
         loop_frequency_score=rel_res['loop_frequency_score'],
         risk_level=rel_res['risk_level'],
-        predicted_failure_prob=rel_res['predicted_failure_prob'],
+        predicted_failure_prob=rel_res['risk_index'],
         calculated_at=datetime.utcnow()
     )
     db.add(rel_score_obj)

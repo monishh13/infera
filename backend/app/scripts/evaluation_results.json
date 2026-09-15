@@ -1,8 +1,21 @@
 {
-  "timestamp": "2026-09-09T12:37:16.007055",
+  "timestamp": "2026-09-15T23:44:58.576593",
   "total_events_evaluated": 1050,
   "injected_anomalies_count": 250,
-  "avg_detection_latency_ms": 17.589,
+  "dataset_sizes": [
+    1050
+  ],
+  "avg_detection_latency_ms": 36.946,
+  "latency_measurement": {
+    "Isolation Forest": {
+      "avg_ms": 36.946,
+      "samples": 1050
+    },
+    "LOF Baseline": {
+      "avg_ms": 3.483,
+      "samples": 1050
+    }
+  },
   "idle_false_positive_rate": 0.032,
   "overall": {
     "Isolation Forest": {
@@ -13,7 +26,8 @@
       "tp": 245,
       "fp": 19,
       "fn": 5,
-      "tn": 781
+      "tn": 781,
+      "avg_latency_ms": 36.946
     },
     "LOF Baseline": {
       "precision": 0.9462,
@@ -23,7 +37,8 @@
       "tp": 246,
       "fp": 14,
       "fn": 4,
-      "tn": 786
+      "tn": 786,
+      "avg_latency_ms": 3.483
     },
     "Threshold Rules": {
       "precision": 0.7806,

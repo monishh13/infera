@@ -20,6 +20,9 @@ class TelemetrySpan:
     metadata: Dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
     source: str = "sdk"
+    parent_agent_id: Optional[str] = None
+    parent_event_id: Optional[int] = None
+    interaction_type: Optional[str] = None
 
     def to_ingest_dict(self) -> Dict[str, Any]:
         return {
@@ -37,4 +40,7 @@ class TelemetrySpan:
             "raw_payload": self.metadata,
             "source": self.source,
             "external_event_id": self.event_id,
+            "parent_agent_id": self.parent_agent_id,
+            "parent_event_id": self.parent_event_id,
+            "interaction_type": self.interaction_type,
         }

@@ -9,6 +9,10 @@ os.environ["DATABASE_URL"] = os.getenv(
     "postgresql+asyncpg://Infera:changeme123@localhost:5432/Infera"
 )
 os.environ["ALLOW_AUTO_PROVISION_AGENTS"] = "True"
+# asyncpg pooled connections are bound to the event loop that created them.
+# Use a test-only NullPool so each test owns and closes its database connection
+# without leaking loop-bound pooled connections into the next anyio test loop.
+os.environ["INFERA_TESTING"] = "True"
 
 @pytest.fixture
 def anyio_backend():

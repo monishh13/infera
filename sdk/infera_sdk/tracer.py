@@ -18,7 +18,10 @@ class SpanTracer:
         name: str,
         step_type: str = "tool",
         loop_count: int = 1,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        parent_agent_id: Optional[str] = None,
+        parent_event_id: Optional[int] = None,
+        interaction_type: Optional[str] = None
     ):
         self.transport = transport
         self.config = config
@@ -34,6 +37,9 @@ class SpanTracer:
         self.status = "SUCCESS"
         self.error_message = None
         self.start_time = 0.0
+        self.parent_agent_id = parent_agent_id
+        self.parent_event_id = parent_event_id
+        self.interaction_type = interaction_type
 
     def __enter__(self):
         self.start_time = time.time()
@@ -70,7 +76,10 @@ class SpanTracer:
             error_message=self.error_message,
             loop_count=self.loop_count,
             metadata=self.metadata,
-            source="sdk"
+            source="sdk",
+            parent_agent_id=self.parent_agent_id,
+            parent_event_id=self.parent_event_id,
+            interaction_type=self.interaction_type,
         )
         self.transport.queue_span(span)
         return False  # Re-raise exceptions normally
@@ -97,7 +106,10 @@ class SessionTracer:
         name: str,
         step_type: str = "tool",
         loop_count: int = 1,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        parent_agent_id: Optional[str] = None,
+        parent_event_id: Optional[int] = None,
+        interaction_type: Optional[str] = None,
     ) -> SpanTracer:
         return SpanTracer(
             transport=self.transport,
@@ -107,7 +119,10 @@ class SessionTracer:
             name=name,
             step_type=step_type,
             loop_count=loop_count,
-            metadata=metadata
+            metadata=metadata,
+            parent_agent_id=parent_agent_id,
+            parent_event_id=parent_event_id,
+            interaction_type=interaction_type,
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):

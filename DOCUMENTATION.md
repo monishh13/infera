@@ -20,7 +20,7 @@ Infera bridges this gap through a multi-tier platform architecture:
 - **Online Unsupervised Machine Learning Models**: Isolation Forest (`IFModel`) and Local Outlier Factor (`LOFModel`) anomaly estimators operating without pre-labeled failure datasets.
 - **Explainable Anomaly Detection Engine**: Root-cause diagnostic generator translating ML anomaly scores and telemetry deviations into human-readable explanatory reasons.
 - **Context-Aware Action Recommendations Engine**: Automated remediation engine mapping anomaly alert types to priority-ranked action items (`critical`, `high`, `medium`, `low`).
-- **Agent Reliability Score (ARS)**: A composite health index ($0\text{--}100$) evaluating real-time operational stability and calculating failure probabilities $P(\text{failure})$.
+- **Agent Reliability Score (ARS)**: A deterministic heuristic operational health/reliability index ($0\text{--}100$) for real-time operational triage; it is not a calibrated failure probability.
 - **Session Replay & Trace Analysis Engine**: Step-by-step interactive replay module visualizing complete agent reasoning traces, latency bottlenecks, and per-step token/USD costs.
 - **Synthetic Multi-Agent Simulator & Perturbation Engine**: Built-in simulator generating telemetry across 4 agent archetypes ($A_{001}$–$A_{004}$) with automated fault injection (`token_spike`, `infinite_loop`, `high_latency`, `tool_failure_cascade`, `behavioral_drift`).
 - **Real LLM Agent (A004 / Groq)**: A live agent backed by Groq's inference API (`llama-3.1-8b-instant`) that emits genuine token counts, latency, and status measurements from real LLM calls.
@@ -264,7 +264,7 @@ Returns a comprehensive health profile including:
 - `risk_level`: `LOW | MEDIUM | HIGH | CRITICAL`
 - `status`: `healthy | degraded | at_risk | critical`
 - `trend`: `improving | stable | degrading` (derived from last 6 ARS records)
-- `tool_success_rate`, `avg_latency`, `avg_tokens`, `token_efficiency`, `failure_probability`, `loop_frequency`
+- `tool_success_rate`, `avg_latency`, `avg_tokens`, `token_efficiency`, `risk_index`, `loop_frequency`
 - `top_reasons`: list of health sub-score degradations (e.g., tool failures, high latency, token inefficiency, excessive looping)
 - `reliability_trend`: last 20 ARS time-series data points
 - `latency_trend` / `token_trend`: last 50 telemetry events
@@ -390,20 +390,34 @@ $$\text{ARS} = \Big(0.40 \cdot S_{\text{tool}} + 0.20 \cdot S_{\text{token}} + 0
 
 `baseline_latency` is derived as `agent.latency_threshold_ms / 2.0`.
 
-### Risk Matrix & Non-Linear Failure Prediction
+### Heuristic Risk Matrix
 
-| Score Range | Risk Level | Failure Probability Formula $P(\text{failure})$ |
+ARS is a deterministic heuristic operational health/reliability index. It is
+not a calibrated statistical probability and must not be read as one. The
+`risk_index` is a relative index for operational triage.
+
+| Score Range | Risk Level | Heuristic Risk Index |
 |---|---|---|
 | $85 \le \text{ARS} \le 100$ | `LOW` | $\max\left(0.01, \frac{100 - \text{ARS}}{300}\right)$ |
 | $65 \le \text{ARS} < 85$ | `MEDIUM` | $0.05 + (85 - \text{ARS}) \times 0.0075$ |
 | $40 \le \text{ARS} < 65$ | `HIGH` | $0.20 + (65 - \text{ARS}) \times 0.012$ |
 | $0 \le \text{ARS} < 40$ | `CRITICAL` | $\min\left(0.95, 0.50 + (40 - \text{ARS}) \times 0.01125\right)$ |
 
+These ranges describe heuristic association/triage bands. They do not imply
+that a score maps to a future failure probability.
+
 ---
 
 ## 14. Multi-Agent Simulator & Perturbation Framework
 
 Located in [`backend/app/simulator/`](backend/app/simulator/):
+
+`GET /api/v1/simulator/scenario/{scenario}` provides reproducible
+`independent`, `normal_workflow`, `failure_cascade`, and `retry` traces. Events
+retain the same `session_id` and include `parent_agent_id`/`parent_event_id`.
+The response distinguishes failed agents, observed anomalous agents, downstream
+dependents, and observed dependency impact. Dependency impact is observational;
+the evaluator makes no causal inference.
 
 ### Synthetic Agent Archetypes
 
