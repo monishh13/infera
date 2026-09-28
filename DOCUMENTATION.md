@@ -14,16 +14,16 @@ Traditional Application Performance Monitoring (APM) systems (e.g., Datadog, Pro
 
 ### Infera Solution & Ecosystem Architecture
 Infera bridges this gap through a multi-tier platform architecture:
-- **`infera-sdk` Python Client**: Official lightweight, non-blocking telemetry & tracing client for Python AI applications (LangChain, LlamaIndex, OpenAI, AutoGen, or custom agent frameworks).
+- **`infera-sdk` Python Client**: Lightweight, non-blocking telemetry & tracing client for Python AI applications (LangChain, LlamaIndex, OpenAI, AutoGen, or custom agent frameworks). It is a Python SDK designed for the Infera platform, not a separate vendor-maintained package.
 - **High-Throughput FastAPI Ingress Engine**: RESTful ingestion endpoint with idempotency checks (`external_event_id`) and multi-source telemetry routing (`simulator` vs `sdk`).
-- **10-Dimensional Spatial-Temporal Feature Extraction**: Transforms heterogeneous event spans into dense 10D feature vectors ($\mathbf{x} \in \mathbb{R}^{10}$).
+- **13-Dimensional Spatial-Temporal Feature Extraction**: Transforms heterogeneous event spans into dense 13D feature vectors ($\mathbf{x} \in \mathbb{R}^{13}$), including token and latency dynamics, failure rates, cost efficiency, prompt/response ratios, and rolling latency variability.
 - **Online Unsupervised Machine Learning Models**: Isolation Forest (`IFModel`) and Local Outlier Factor (`LOFModel`) anomaly estimators operating without pre-labeled failure datasets.
 - **Explainable Anomaly Detection Engine**: Root-cause diagnostic generator translating ML anomaly scores and telemetry deviations into human-readable explanatory reasons.
 - **Context-Aware Action Recommendations Engine**: Automated remediation engine mapping anomaly alert types to priority-ranked action items (`critical`, `high`, `medium`, `low`).
 - **Agent Reliability Score (ARS)**: A deterministic heuristic operational health/reliability index ($0\text{--}100$) for real-time operational triage; it is not a calibrated failure probability.
 - **Session Replay & Trace Analysis Engine**: Step-by-step interactive replay module visualizing complete agent reasoning traces, latency bottlenecks, and per-step token/USD costs.
 - **Synthetic Multi-Agent Simulator & Perturbation Engine**: Built-in simulator generating telemetry across 4 agent archetypes ($A_{001}$–$A_{004}$) with automated fault injection (`token_spike`, `infinite_loop`, `high_latency`, `tool_failure_cascade`, `behavioral_drift`).
-- **Real LLM Agent (A004 / Groq)**: A live agent backed by Groq's inference API (`llama-3.1-8b-instant`) that emits genuine token counts, latency, and status measurements from real LLM calls.
+- **Real LLM Agent (A004)**: A live agent backed by the configured Google AI Studio/Gemini or Groq provider. It emits genuine token counts, latency, and status measurements from real LLM calls.
 - **Obsidian Dark Real-Time Analytics Command Center**: React 18 / Vite dashboard featuring Directed Acyclic Graph (DAG) tool visualizations, live telemetry streams, explainable alerts, session replays, agent comparison matrices, and a Real Agent Playground.
 
 > **Important Boundary & Scope Clarification**: Infera observes applications that send telemetry via the `infera-sdk` or REST API endpoints. It **does NOT** automatically capture un-instrumented third-party web browser applications (such as ChatGPT in a browser window) unless integrated via code or middleware.
@@ -56,8 +56,8 @@ Infera bridges this gap through a multi-tier platform architecture:
 |                                       |                                                           |
 |                                       v                                                           |
 |     +-------------------------------------------------------------------+                         |
-|     |              10D Feature Engineering Matrix Engine                |                         |
-|     |    (Tokens, Latency, Z-Scores, Velocity, Failure Rate, Age Ratio) |                         |
+|     |              13D Feature Engineering Matrix Engine                |                         |
+|     | (Tokens, Latency, Z-Scores, Velocity, Failure Rate, Cost, Age Ratio)|                         |
 |     +-------------------------------------------------------------------+                         |
 |                                       |                                                           |
 |       +-------------------------------+-------------------------------+                           |
@@ -80,11 +80,11 @@ Infera bridges this gap through a multi-tier platform architecture:
 
 ---
 
-## 3. Official `infera-sdk` Python Telemetry Library
+## 3. Python `infera-sdk` for Infera Telemetry
 
 Located under [`sdk/`](sdk/).
 
-The `infera-sdk` provides an intuitive context-manager and decorator-based tracing interface for Python AI agents.
+The `infera-sdk` provides an intuitive context-manager and decorator-based tracing interface for Python AI agents. It is a project SDK designed for integrating Python applications with Infera and is not a separate external vendor-maintained package.
 
 ### 3.1. Installation & Environment Configuration
 
@@ -168,7 +168,7 @@ The `process_single_telemetry(req, db)` function is the core ingestion pipeline:
 1. **Idempotency Guard** — Returns early if `external_event_id` already exists in the database.
 2. **Agent Lookup / Auto-Provision** — Fetches the registered `Agent` record; raises HTTP 404 if not found (unless `ALLOW_AUTO_PROVISION_AGENTS=True`).
 3. **Session Lookup / Creation** — Fetches or creates the `Session` associated with `session_id`.
-4. **Feature Extraction** — Calls `extract_features(event_dict, hist_dicts)` to produce a 10D vector from the event and last 50 historical events.
+4. **Feature Extraction** — Calls `extract_features(event_dict, hist_dicts)` to produce a 13D vector from the event and last 50 historical events.
 5. **ML Scoring** — Runs the active `IFModel` (agent-specific → falls back to global); uses a heuristic rule if the model has not been trained yet.
 6. **TelemetryEvent Persistence** — Writes a new `TelemetryEvent` record with anomaly score & flag.
 7. **Session Statistics Update** — Increments `total_tokens`, `total_cost_usd`, `total_tool_calls`, `failed_tool_calls`.
@@ -612,8 +612,12 @@ Built with **React 18** + **Vite** + **Recharts** + **Lucide-React** + **Motion*
 | `FAILURE_CASCADE_WINDOW` | `5` | Rolling window for cascade failure detection |
 | `SIMULATOR_TICK_INTERVAL_SEC` | `2.0` | Default simulator event emission interval |
 | `COST_PER_1K_TOKENS` | `0.002` | USD cost per 1,000 tokens (used for cost calculation) |
+| `LLM_PROVIDER` | `auto` (code default) | Provider used by A004: `google`, `gemini`, `groq`, or `auto` |
+| `GOOGLE_API_KEY` | `""` | Google AI Studio API key |
+| `GEMINI_API_KEY` | `""` | Alternative Google/Gemini API key |
+| `GOOGLE_MODEL` | `gemini-2.5-flash` | Google/Gemini model name for A004 |
 | `GROQ_API_KEY` | `""` | Groq API key for Real LLM Agent (A004) |
-| `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq model name for A004 |
+| `GROQ_MODEL` | `llama-3.1-8b-instant` (code default) | Groq model name for A004; the current local `.env` uses `openai/gpt-oss-20b` |
 | `ALLOW_AUTO_PROVISION_AGENTS` | `False` | Auto-create agent records on unknown agent IDs |
 
 ---

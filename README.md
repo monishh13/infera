@@ -15,7 +15,7 @@
 Conventional Application Performance Monitoring (APM) tools (e.g., Datadog, Prometheus) rely on static call graphs, fixed error rate thresholds, and predictable compute metrics. Autonomous LLM agents invalidate these assumptions due to non-deterministic reasoning paths, unexpected token consumption bursts, infinite tool execution loops, dependency failure cascades, and semantic drift.
 
 Infera solves these challenges by combining:
-- **`infera-sdk` Python Client**: Official lightweight, non-blocking telemetry tracing library for Python AI agent frameworks (LangChain, LlamaIndex, OpenAI, AutoGen, custom agents).
+- **`infera-sdk` Python Client**: A lightweight, non-blocking telemetry tracing client for Python AI agent frameworks (LangChain, LlamaIndex, OpenAI, AutoGen, custom agents). It is a project-local Python SDK designed to integrate with the Infera platform, not a separate vendor-maintained package.
 - **10-Dimensional Spatial-Temporal Feature Engineering**: Converts raw agent execution spans into dense numerical feature vectors incorporating token dynamics, temporal intervals, tool interaction patterns, and loop rates.
 - **Unsupervised Anomaly Detection Architecture**: Employs online **Isolation Forest** (`IFModel`) and **Local Outlier Factor** (`LOFModel`) algorithms trained in-process without labeled failure datasets.
 - **Explainable Anomaly Detection Engine**: Generates root-cause diagnostic explanations comparing anomalous spans against historical agent baselines.
@@ -76,6 +76,8 @@ Infera solves these challenges by combining:
 ---
 
 ## Python SDK (`infera-sdk`) Integration
+
+This repository includes a Python SDK for the Infera platform. It is a local SDK implementation designed for this project and its telemetry backend; it is not a separate externally maintained package.
 
 Instrument your Python AI agents in just a few lines of code:
 
@@ -229,7 +231,7 @@ Infera/
 │   ├── requirements.txt         # Backend Python dependencies
 │   └── Dockerfile               # Backend container recipe
 ├── sdk/
-│   ├── infera_sdk/              # Official Python Telemetry & Tracing SDK (v0.1.0)
+│   ├── infera_sdk/              # Python telemetry & tracing SDK for Infera (project-local client)
 │   │   ├── client.py            # Infera client entry point
 │   │   ├── tracer.py            # AgentTracer, SessionTracer, SpanTracer context managers
 │   │   ├── transport.py         # Asynchronous non-blocking HTTP batch transport

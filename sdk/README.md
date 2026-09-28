@@ -1,6 +1,6 @@
 # Infera Python SDK
 
-`infera-sdk` is the official Python telemetry & tracing client for the **Infera AI Agent Observability Platform**.
+`infera-sdk` is the Python telemetry & tracing client designed for the **Infera AI Agent Observability Platform**. It is a project-local SDK implementation for integrating Python agents with Infera, not a separate external vendor SDK.
 
 ---
 
