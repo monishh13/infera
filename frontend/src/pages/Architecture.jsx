@@ -34,7 +34,7 @@ const pipelineStages = [
     label: 'Feature Engineering',
     icon: Cpu,
     color: '#10b981',
-    description: '10-dimensional feature vector extraction with z-scores, rolling stats, and session context',
+    description: '13-dimensional feature vector extraction with z-scores, rolling stats, and session context',
   },
   {
     id: 'ml',

@@ -16,7 +16,7 @@ Conventional Application Performance Monitoring (APM) tools (e.g., Datadog, Prom
 
 Infera solves these challenges by combining:
 - **`infera-sdk` Python Client**: A lightweight, non-blocking telemetry tracing client for Python AI agent frameworks (LangChain, LlamaIndex, OpenAI, AutoGen, custom agents). It is a project-local Python SDK designed to integrate with the Infera platform, not a separate vendor-maintained package.
-- **10-Dimensional Spatial-Temporal Feature Engineering**: Converts raw agent execution spans into dense numerical feature vectors incorporating token dynamics, temporal intervals, tool interaction patterns, and loop rates.
+- **13-Dimensional Spatial-Temporal Feature Engineering**: Converts raw agent execution spans into dense numerical feature vectors incorporating token dynamics, temporal intervals, tool interaction patterns, and loop rates.
 - **Unsupervised Anomaly Detection Architecture**: Employs online **Isolation Forest** (`IFModel`) and **Local Outlier Factor** (`LOFModel`) algorithms trained in-process without labeled failure datasets.
 - **Explainable Anomaly Detection Engine**: Generates root-cause diagnostic explanations comparing anomalous spans against historical agent baselines.
 - **Context-Aware Action Recommendations Engine**: Provides priority-ranked remediation guidance (`critical`, `high`, `medium`, `low`) for operational alerts.
@@ -52,7 +52,7 @@ Infera solves these challenges by combining:
 |                                       |                                                           |
 |                                       v                                                           |
 |     +-------------------------------------------------------------------+                         |
-|     |              10D Feature Engineering Matrix Engine                |                         |
+|     |              13D Feature Engineering Matrix Engine                |                         |
 |     +-------------------------------------------------------------------+                         |
 |                                       |                                                           |
 |       +-------------------------------+-------------------------------+                           |
@@ -125,7 +125,7 @@ infera.flush()
 ## Core Capabilities
 
 1. **Idempotent Telemetry Ingress**: FastAPI endpoint equipped with `external_event_id` deduplication and source attribution (`simulator` vs `sdk`).
-2. **10D Spatial-Temporal Feature Engineering**: Extracts numerical vectors ($\mathbf{x} \in \mathbb{R}^{10}$) measuring token deviations (z-scores), latencies, failure rates, compute velocity, and session age ratios.
+2. **13D Spatial-Temporal Feature Engineering**: Extracts numerical vectors ($\mathbf{x} \in \mathbb{R}^{13}$) measuring token deviations (z-scores), latencies, failure rates, compute velocity, session age ratios, and other temporal behavioral features.
 3. **Unsupervised Isolation Forest Engine**: In-process ML detection trained on dense feature vectors to flag non-deterministic runtime anomalies without labeled datasets.
 4. **Explainable Anomaly Reasons Engine**: Diagnostics module generating root-cause explanations (e.g. `Token usage 8.2× higher than baseline`, `IF score = -0.74`).
 5. **Context-Aware Recommendations Engine**: Actionable remediation steps with priority levels (`critical`, `high`, `medium`, `low`).
@@ -223,7 +223,7 @@ Infera/
 │   │   ├── models/              # Relational schemas (User, Agent, Session, TelemetryEvent, AnomalyAlert, AgentReliabilityScore, MLModelMetadata)
 │   │   ├── schemas/             # Data validation schemas (Pydantic)
 │   │   ├── services/            # Alert evaluation, auth, APScheduler retraining
-│   │   ├── ml/                  # 10D feature engineering, Isolation Forest, LOF, ARS, model store
+│   │   ├── ml/                  # 13D feature engineering, Isolation Forest, LOF, ARS, model store
 │   │   ├── simulator/           # Synthetic agents (A001-A003) + Real LLM Agent (A004) + fault injectors
 │   │   ├── routers/             # API endpoints (auth, agents, sessions, telemetry, anomalies, dashboard, simulator, ml, enhanced)
 │   │   └── scripts/             # Administrative data seeding scripts

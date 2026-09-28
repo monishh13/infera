@@ -220,7 +220,7 @@ export default function RealAgentPlayground() {
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <SectionHeader
             title="Real-Time Telemetry & ML Scoring Engine Output"
-            description="Ingested directly via process_single_telemetry into 10D Feature Engineering and Isolation Forest."
+            description="Ingested directly via process_single_telemetry into 13D Feature Engineering and Isolation Forest."
           />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
