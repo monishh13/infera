@@ -63,6 +63,8 @@ async def get_session_tool_graph(id: str, db: AsyncSession = Depends(get_db), cu
 
     nodes = []
     edges = []
+    agent_relationships = {}
+    anomalous_agents = {event.agent_id for event in events if event.is_anomaly}
     
     for idx, e in enumerate(events):
         node_id = f"node_{e.id}"
@@ -81,13 +83,30 @@ async def get_session_tool_graph(id: str, db: AsyncSession = Depends(get_db), cu
             "interaction_type": e.interaction_type,
             "impact_status": e.impact_status,
         })
+        if e.parent_agent_id and e.parent_agent_id != e.agent_id:
+            relationship_key = (e.parent_agent_id, e.agent_id)
+            relationship = agent_relationships.setdefault(relationship_key, {
+                "upstream_agent": e.parent_agent_id,
+                "downstream_agent": e.agent_id,
+                "interaction_types": set(),
+                "event_count": 0,
+                "observed_anomaly": False,
+                "dependency_impact": False,
+                "upstream_anomaly": e.parent_agent_id in anomalous_agents,
+            })
+            if e.interaction_type:
+                relationship["interaction_types"].add(e.interaction_type)
+            relationship["event_count"] += 1
+            relationship["observed_anomaly"] = relationship["observed_anomaly"] or bool(e.is_anomaly)
+            relationship["dependency_impact"] = relationship["dependency_impact"] or e.impact_status == "dependency_impact"
+            relationship["upstream_anomaly"] = relationship["upstream_anomaly"] or e.parent_agent_id in anomalous_agents
         if idx > 0:
             edges.append({
                 "source": f"node_{events[idx-1].id}",
                 "target": node_id,
                 "label": f"Step {idx}"
             })
-        if e.parent_event_id:
+        if e.parent_event_id and any(parent.id == e.parent_event_id for parent in events):
             edges.append({
                 "source": f"node_{e.parent_event_id}",
                 "target": node_id,
@@ -95,9 +114,18 @@ async def get_session_tool_graph(id: str, db: AsyncSession = Depends(get_db), cu
                 "relationship": "cross_agent",
             })
 
+    relationship_rows = []
+    for relationship in agent_relationships.values():
+        relationship["interaction_types"] = sorted(relationship["interaction_types"])
+        relationship["observed_cascade"] = (
+            relationship["dependency_impact"] and relationship["upstream_anomaly"]
+        )
+        relationship_rows.append(relationship)
+
     return {
         "session_id": id,
         "nodes": nodes,
         "edges": edges,
+        "agent_relationships": relationship_rows,
         "total_steps": len(nodes)
     }

@@ -47,6 +47,57 @@ export default function ToolGraph({ sessionId }) {
         <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-tertiary)' }}>No tool calls recorded in this session</div>
       ) : (
         <div style={{ overflowX: 'auto', padding: '20px 0' }}>
+          <div style={{
+            marginBottom: '20px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid var(--border-default)',
+            background: 'var(--surface-secondary, #F8FAFC)',
+          }}>
+            <h4 style={{ margin: '0 0 10px', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+              Agent Relationships
+            </h4>
+            {Array.isArray(graphData.agent_relationships) && graphData.agent_relationships.length > 0 ? (
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {graphData.agent_relationships.map((relationship) => (
+                  <div
+                    key={`${relationship.upstream_agent}-${relationship.downstream_agent}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(100px, 1fr) auto minmax(100px, 1fr)',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      background: '#FFFFFF',
+                      border: '1px solid var(--border-default)',
+                      fontSize: '0.78rem',
+                    }}
+                  >
+                    <strong className="mono">{relationship.upstream_agent}</strong>
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: 700 }}>→</span>
+                    <strong className="mono">{relationship.downstream_agent}</strong>
+                    <span style={{ gridColumn: '1 / -1', color: 'var(--text-secondary)' }}>
+                      {relationship.interaction_types?.length
+                        ? `Interaction: ${relationship.interaction_types.join(', ')} · `
+                        : ''}
+                      {relationship.event_count} event{relationship.event_count === 1 ? '' : 's'} ·
+                      {' '}{relationship.observed_anomaly ? 'Observed anomaly' : 'No observed anomaly'} ·
+                      {' '}{relationship.dependency_impact ? 'Dependency impact' : 'No dependency impact'}
+                      {relationship.upstream_anomaly ? ' · Upstream anomaly observed' : ''}
+                      {relationship.observed_cascade ? ' · Observed cascade' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, color: 'var(--text-tertiary)', fontSize: '0.78rem' }}>
+                No cross-agent relationships were recorded for this session. Instrument delegated
+                work with the same session ID plus parent agent and interaction metadata.
+              </p>
+            )}
+          </div>
+
           {/* SVG Pipeline View */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 'max-content' }}>
             {graphData.nodes.map((node, i) => {
